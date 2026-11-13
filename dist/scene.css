@@ -64,6 +64,9 @@
 .experience[data-light="day"]{background-image:url('assets/day-garden.png')}
 
 /* The wildlife field log is a phone UI, revealed only in its demo. */
+.wildlife-instruction{position:absolute;z-index:4;top:clamp(96px,14vh,145px);left:clamp(15px,3.3vw,48px);width:min(290px,calc(100% - 355px));margin:0;padding:13px 16px;border:1px solid rgba(223,231,198,.32);border-left:3px solid #d6e5ad;border-radius:6px;background:rgba(7,20,13,.82);box-shadow:0 12px 32px rgba(0,0,0,.25);color:#f4f2e7;font:500 13px/1.5 Manrope,'Helvetica Neue',Arial,sans-serif;opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .45s ease,transform .45s ease}
+.experience[data-demo="3"] .wildlife-instruction{opacity:1;transform:translateY(0)}
+.experience[data-demo="3"].wildlife-instruction-dismissed .wildlife-instruction{opacity:0;transform:translateY(-8px)}
 .glow-phone{position:absolute;z-index:4;top:clamp(96px,14vh,145px);right:clamp(15px,3.3vw,48px);width:clamp(245px,31vw,314px);height:min(76vh,612px);min-height:455px;opacity:0;transform:translateX(32px) scale(.97);pointer-events:none;transition:opacity .6s ease,transform .7s cubic-bezier(.2,.8,.2,1)}
 .experience[data-demo="3"] .glow-phone{opacity:1;transform:translateX(0) scale(1);pointer-events:auto}
 .phone-frame{height:100%;padding:7px;border-radius:39px;background:linear-gradient(135deg,#555d5c,#121818 22%,#47504d 48%,#060a09 80%,#777e77);box-shadow:0 23px 65px rgba(0,0,0,.62),0 0 0 1px rgba(241,244,231,.22),inset 0 0 0 1px #080c0a}
@@ -82,7 +85,6 @@
 .app-content{height:calc(100% - 106px);padding:23px 23px 0;display:flex;flex-direction:column}
 .app-overline{margin:0 0 14px;font-size:8px;letter-spacing:.17em;font-weight:800;color:#779083}
 .app-content h2{margin:0;font-family:Georgia,serif;font-size:clamp(37px,4.5vw,46px);line-height:.9;letter-spacing:-.06em;font-weight:400}
-.app-description{margin:15px 0 22px;max-width:235px;font-size:11px;line-height:1.55;color:#6a8075}
 .app-list-heading{display:flex;align-items:center;justify-content:space-between;padding-bottom:9px;border-bottom:1px solid #c7d4c9;font-size:8px;font-weight:800;letter-spacing:.14em;color:#5d7769}
 .app-count{font-size:10px;color:#3e614d}
 .app-sightings{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#a7baaa transparent}
@@ -97,8 +99,8 @@
 .sighting-check{margin-left:auto;color:#7aa45e;font-size:15px}
 .phone-home{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);width:31%;height:4px;border-radius:4px;background:#1a2d25}
 @keyframes sighting-in{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
-@media(max-width:700px){.glow-phone{width:clamp(205px,41vw,264px);right:12px;top:103px;height:min(69vh,525px);min-height:405px}.phone-frame{border-radius:32px}.phone-screen{border-radius:27px}.app-content{padding:18px 17px 0}.app-header{padding-inline:17px}.app-content h2{font-size:36px}.app-description{font-size:10px;margin-bottom:15px}.app-overline{margin-bottom:10px}.sighting-row{min-height:56px}.sighting-image{width:37px;height:37px}}
-@media(max-width:480px){.glow-phone{width:45vw;min-width:170px;max-width:195px;right:7px;top:90px;height:430px;min-height:0}.phone-frame{padding:5px;border-radius:27px}.phone-screen{border-radius:22px}.phone-island{height:16px}.phone-status{height:30px;padding:8px 15px 0}.app-header{height:34px;padding-inline:12px}.app-brand{font-size:10px}.app-content{height:calc(100% - 86px);padding:14px 12px 0}.app-content h2{font-size:29px}.app-overline,.app-list-heading{font-size:7px}.app-description{font-size:9px;line-height:1.4;margin:9px 0 12px}.sighting-image{width:32px;height:32px}.sighting-row{min-height:48px;gap:6px}.sighting-name{font-size:9px}.sighting-time{font-size:8px}}
+@media(max-width:700px){.wildlife-instruction{left:12px;top:103px;width:min(235px,calc(100% - 230px));font-size:11px;padding:10px 12px}.glow-phone{width:clamp(205px,41vw,264px);right:12px;top:103px;height:min(69vh,525px);min-height:405px}.phone-frame{border-radius:32px}.phone-screen{border-radius:27px}.app-content{padding:18px 17px 0}.app-header{padding-inline:17px}.app-content h2{font-size:36px}.app-overline{margin-bottom:10px}.sighting-row{min-height:56px}.sighting-image{width:37px;height:37px}}
+@media(max-width:480px){.wildlife-instruction{left:7px;top:90px;width:calc(100% - 215px);font-size:10px;padding:8px 9px}.glow-phone{width:45vw;min-width:170px;max-width:195px;right:7px;top:90px;height:430px;min-height:0}.phone-frame{padding:5px;border-radius:27px}.phone-screen{border-radius:22px}.phone-island{height:16px}.phone-status{height:30px;padding:8px 15px 0}.app-header{height:34px;padding-inline:12px}.app-brand{font-size:10px}.app-content{height:calc(100% - 86px);padding:14px 12px 0}.app-content h2{font-size:29px}.app-overline,.app-list-heading{font-size:7px}.sighting-image{width:32px;height:32px}.sighting-row{min-height:48px;gap:6px}.sighting-name{font-size:9px}.sighting-time{font-size:8px}}
 @media(prefers-reduced-motion:reduce){.glow-phone,.wildlife-animal{transition:none}.sighting-row,.wildlife-animal.is-calling img{animation:none}}
 
 /* Migration watch keeps the map beside the lamp. */
@@ -159,6 +161,7 @@
   .tab-status:before{width:4px;height:4px}
   .light-switch{top:60px;right:10px;width:142px;height:34px}
   .light-switch-label{font-size:12px}
+  .wildlife-instruction{top:60px;left:8px;width:clamp(170px,27vw,220px);padding:8px 10px;font-size:clamp(10px,1.5vw,11px);line-height:1.4}
   .glow-phone,.migration-phone{top:58px;height:calc(100svh - 66px);min-height:0;width:clamp(175px,26vw,220px)}
   .glow-phone{right:8px}
   .migration-phone{left:8px}

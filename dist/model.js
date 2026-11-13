@@ -352,6 +352,17 @@
     lastWalkTime=0;
     walkFrame=requestAnimationFrame(walk);
   }
+  function personAt(clientX,clientY){
+    if(activeDemo!==2||personElement.style.display==='none')return false;
+    const bounds=personElement.getBoundingClientRect();
+    const sidePadding=bounds.width*.22;
+    return clientX>=bounds.left+sidePadding&&clientX<=bounds.right-sidePadding&&clientY>=bounds.top&&clientY<=bounds.bottom;
+  }
+  function stopPersonDrag(){
+    personFrame=1;
+    personBob=0;
+    draw();
+  }
   function setCamera(loc,c){
     gl.uniform3fv(loc.eye,c.eye);gl.uniform3fv(loc.right,c.right);gl.uniform3fv(loc.up,c.up);gl.uniform3fv(loc.forward,c.forward);gl.uniform1f(loc.aspect,canvas.width/canvas.height);
   }
@@ -530,6 +541,7 @@
   function syncDemo(){
     const next=Number(experience.dataset.demo)||0;
     if(next!==activeDemo){
+      canvas.style.cursor='';
       experience.classList.remove('wildlife-visible');
       animateExplosion(next===5?1:0);
       if(next===2){
@@ -592,11 +604,36 @@
     }
     syncLight();
   }
-  canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,moved:false,locked:activeDemo===2};canvas.setPointerCapture(e.pointerId)});
+  canvas.addEventListener('pointerdown',e=>{
+    const person=personAt(e.clientX,e.clientY);
+    const grabPoint=person?groundPoint(e.clientX,e.clientY):null;
+    drag={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,moved:false,locked:activeDemo===2,person,grabOffset:grabPoint?{x:grabPoint.x-personPosition.x,z:grabPoint.z-personPosition.z}:null};
+    if(person){
+      cancelAnimationFrame(walkFrame);
+      walkFrame=0;personTarget=null;personPath=[];lastWalkTime=0;
+      canvas.style.cursor='grabbing';
+    }
+    canvas.setPointerCapture(e.pointerId);
+  });
   canvas.addEventListener('pointermove',e=>{
-    if(!drag)return;
+    if(!drag){canvas.style.cursor=personAt(e.clientX,e.clientY)?'grab':'';return;}
     if(drag.locked){
       if(Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)>=5)drag.moved=true;
+      if(drag.person&&drag.moved){
+        const point=groundPoint(e.clientX,e.clientY);
+        if(point){
+          const next=outsideLamp({x:Math.max(-450,Math.min(450,point.x-drag.grabOffset.x)),z:Math.max(-260,Math.min(260,point.z-drag.grabOffset.z))});
+          const dx=next.x-personPosition.x,dz=next.z-personPosition.z,distance=Math.hypot(dx,dz);
+          if(distance>.01){
+            faceTravel(dx,dz);
+            walkPhase+=distance/18;
+            personFrame=Math.floor(walkPhase)%4;
+            personBob=.5*Math.abs(Math.sin(walkPhase*Math.PI));
+            personPosition.x=next.x;personPosition.z=next.z;
+            draw();
+          }
+        }
+      }
       return;
     }
     if(!drag.moved&&Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)<5)return;
@@ -606,8 +643,14 @@
     elevation=Math.max(minElevation,Math.min(maxElevation,elevation+(e.clientY-drag.y)*.0025));
     drag.x=e.clientX;drag.y=e.clientY;draw();
   });
-  canvas.addEventListener('pointerup',e=>{if(drag?.locked&&!drag.moved&&activeDemo===2)startWalk(groundPoint(e.clientX,e.clientY));drag=null});
-  canvas.addEventListener('pointercancel',()=>{drag=null});
+  canvas.addEventListener('pointerup',e=>{
+    if(drag?.person)stopPersonDrag();
+    else if(drag?.locked&&!drag.moved&&activeDemo===2)startWalk(groundPoint(e.clientX,e.clientY));
+    drag=null;
+    canvas.style.cursor=personAt(e.clientX,e.clientY)?'grab':'';
+  });
+  canvas.addEventListener('pointercancel',()=>{if(drag?.person)stopPersonDrag();drag=null;canvas.style.cursor=''});
+  canvas.addEventListener('pointerleave',()=>{if(!drag)canvas.style.cursor=''});
   canvas.addEventListener('keydown',e=>{
     if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))return;
     e.preventDefault();

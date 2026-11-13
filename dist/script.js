@@ -2,6 +2,7 @@ const experience = document.querySelector('.experience');
 const tabs = [...document.querySelectorAll('.demo-tab')];
 const lightSwitch = document.querySelector('.light-switch');
 const wildlifeLayer = document.querySelector('.wildlife-layer');
+const wildlifeInstruction = document.querySelector('.wildlife-instruction');
 const glowPhone = document.querySelector('.glow-phone');
 const migrationPhone = document.querySelector('.migration-phone');
 let conditionsLight = 'night';
@@ -72,6 +73,10 @@ function recordSighting(key, button) {
   currentCall.play().catch(() => {});
 
   sightingNumber += 1;
+  if (sightingNumber === 2) {
+    experience.classList.add('wildlife-instruction-dismissed');
+    wildlifeInstruction.setAttribute('aria-hidden', 'true');
+  }
   const minuteOfDay = 20 * 60 + 14 + sightingNumber * 2;
   const hours = Math.floor(minuteOfDay / 60) % 24;
   const minutes = String(minuteOfDay % 60).padStart(2, '0');

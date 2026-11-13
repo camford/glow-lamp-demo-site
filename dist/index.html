@@ -7,17 +7,17 @@
   <meta name="description" content="BioGlow interactive field experience">
   <title>BioGlow · Field experience</title>
   <link rel="preload" as="image" href="assets/night-garden.png">
-  <link rel="stylesheet" href="scene.css?v=4">
-  <script src="script.js?v=2" defer></script>
+  <link rel="stylesheet" href="scene.css?v=6">
+  <script src="script.js?v=3" defer></script>
   <script src="model-data.js" defer></script>
   <script src="scene-image.js" defer></script>
   <script src="scene-day-image.js" defer></script>
   <script src="overhead-image.js" defer></script>
-  <script src="model.js?v=9" defer></script>
+  <script src="model.js?v=10" defer></script>
 </head>
 <body>
   <main class="experience" data-demo="0" data-light="night" data-migration-intensity="1">
-    <canvas class="scene-view" aria-label="Interactive 3D garden scene. Drag to look around in most views. In Directional light, tap the ground or use arrow keys to move the person; the camera stays fixed." tabindex="0"></canvas>
+    <canvas class="scene-view" aria-label="Interactive 3D garden scene. Drag to look around in most views. In Directional light, drag the person, tap the ground, or use arrow keys to move them; the camera stays fixed." tabindex="0"></canvas>
     <div class="walking-person" aria-hidden="true"></div>
     <div class="wildlife-layer" inert>
       <button class="wildlife-animal wildlife-coyote" type="button" data-animal="coyote" aria-label="Hear the coyote and log a sighting"><img src="assets/wildlife-coyote.png" alt=""></button>
@@ -25,6 +25,7 @@
       <button class="wildlife-animal wildlife-frog" type="button" data-animal="frog" aria-label="Hear the Sierran tree frog and log a sighting"><img src="assets/wildlife-sierran-tree-frog.png" alt=""></button>
       <button class="wildlife-animal wildlife-raccoon" type="button" data-animal="raccoon" aria-label="Hear the raccoon and log a sighting"><img src="assets/wildlife-raccoon.png" alt=""></button>
     </div>
+    <p class="wildlife-instruction">Tap an animal in the scene to hear its call and record a sighting.</p>
     <section class="glow-phone" aria-label="G.L.O.W. app, Local wildlife" inert>
       <div class="phone-frame">
         <div class="phone-screen">
@@ -34,7 +35,6 @@
           <div class="app-content">
             <p class="app-overline">FIELD STATION / 01</p>
             <h2>Local<br>wildlife<span>.</span></h2>
-            <p class="app-description">Tap an animal in the scene to hear its call and record a sighting.</p>
             <div class="app-list-heading"><span>RECENT SIGHTINGS</span><span class="app-count" aria-label="0 sightings">00</span></div>
             <div class="app-sightings" role="log" aria-label="Wildlife sightings" aria-live="polite">
               <div class="app-empty"><span class="app-empty-icon" aria-hidden="true">✳</span><span>No sightings yet.<br>Explore the garden.</span></div>
