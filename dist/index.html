@@ -68,11 +68,11 @@
     <div class="scene-atmosphere" aria-hidden="true"></div>
     <nav class="demo-nav" aria-label="Explore BioGlow demos">
       <div class="demo-tabs" role="tablist" aria-label="BioGlow demos">
-        <button class="demo-tab" id="tab-1" type="button" role="tab" aria-selected="true" tabindex="0" data-index="0">Intro</button>
-        <button class="demo-tab" id="tab-2" type="button" role="tab" aria-selected="false" tabindex="-1" data-index="1">Auto off</button>
-        <button class="demo-tab" id="tab-3" type="button" role="tab" aria-selected="false" tabindex="-1" data-index="2">Directional light</button>
-        <button class="demo-tab" id="tab-4" type="button" role="tab" aria-selected="false" tabindex="-1" data-index="3">Wildlife detection</button>
-        <button class="demo-tab" id="tab-5" type="button" role="tab" aria-selected="false" tabindex="-1" data-index="4">Migration response</button>
+        <button class="demo-tab" id="tab-1" type="button" role="tab" aria-selected="true" tabindex="0" data-index="0"><span class="tab-title">Intro</span></button>
+        <button class="demo-tab" id="tab-2" type="button" role="tab" aria-selected="false" tabindex="-1" data-index="1"><span class="tab-title">Auto off</span><span class="tab-status" data-status="implemented">Implemented</span></button>
+        <button class="demo-tab" id="tab-3" type="button" role="tab" aria-selected="false" tabindex="-1" data-index="2"><span class="tab-title">Directional light</span><span class="tab-status" data-status="partial">Partially implemented</span></button>
+        <button class="demo-tab" id="tab-4" type="button" role="tab" aria-selected="false" tabindex="-1" data-index="3"><span class="tab-title">Wildlife detection</span><span class="tab-status" data-status="implemented">Implemented</span></button>
+        <button class="demo-tab" id="tab-5" type="button" role="tab" aria-selected="false" tabindex="-1" data-index="4"><span class="tab-title">Migration response</span><span class="tab-status" data-status="partial">Partially implemented</span></button>
       </div>
     </nav>
     <div class="light-switch" role="group" aria-label="Choose day or night" aria-hidden="true" data-light="night">
@@ -80,6 +80,7 @@
       <button type="button" data-light-choice="day" aria-pressed="false" disabled>Day</button>
       <button type="button" data-light-choice="night" aria-pressed="true" disabled>Night</button>
     </div>
+    <footer class="project-credit">a Team Ultraviolet project</footer>
   </main>
 </body>
 </html>
