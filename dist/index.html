@@ -13,7 +13,7 @@
   <script src="scene-image.js" defer></script>
   <script src="scene-day-image.js" defer></script>
   <script src="overhead-image.js" defer></script>
-  <script src="model.js" defer></script>
+  <script src="model.js?v=3" defer></script>
 </head>
 <body>
   <main class="experience" data-demo="0" data-light="night" data-migration-intensity="1">
@@ -73,6 +73,7 @@
         <button class="demo-tab" id="tab-3" type="button" role="tab" aria-selected="false" tabindex="-1" data-index="2"><span class="tab-title">Directional light</span><span class="tab-status" data-status="partial">Partially implemented</span></button>
         <button class="demo-tab" id="tab-4" type="button" role="tab" aria-selected="false" tabindex="-1" data-index="3"><span class="tab-title">Wildlife detection</span><span class="tab-status" data-status="implemented">Implemented</span></button>
         <button class="demo-tab" id="tab-5" type="button" role="tab" aria-selected="false" tabindex="-1" data-index="4"><span class="tab-title">Migration response</span><span class="tab-status" data-status="partial">Partially implemented</span></button>
+        <button class="demo-tab" id="tab-6" type="button" role="tab" aria-selected="false" tabindex="-1" data-index="5"><span class="tab-title">See inside</span></button>
       </div>
     </nav>
     <div class="light-switch" role="group" aria-label="Choose day or night" aria-hidden="true" data-light="night">
@@ -81,6 +82,7 @@
       <button type="button" data-light-choice="night" aria-pressed="true" disabled>Night</button>
     </div>
     <footer class="project-credit">a Team Ultraviolet project</footer>
+    <div class="rotate-hint" role="note"><span class="rotate-hint-icon" aria-hidden="true">↻</span><span>Rotate your phone to landscape for the full experience.</span></div>
   </main>
 </body>
 </html>

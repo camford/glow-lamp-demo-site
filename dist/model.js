@@ -23,8 +23,9 @@
       return vec4(dot(v,uRight)*2.5/uAspect,dot(v,uUp)*2.5,depth*1.01005-30.15075,depth);
     }`;
   const lampVertex=`attribute vec3 aPosition,aNormal; varying vec3 vNormal,vPosition,vView; varying float vHeight;
+    uniform vec3 uPartOffset;
     ${cameraSource}
-    void main(){vHeight=aPosition.y;vNormal=aNormal;vPosition=aPosition;vView=uEye-aPosition;gl_Position=project(aPosition);}`;
+    void main(){vec3 position=aPosition+uPartOffset;vHeight=aPosition.y;vNormal=aNormal;vPosition=position;vView=uEye-position;gl_Position=project(position);}`;
   const lampFragment=`precision mediump float;varying vec3 vNormal,vPosition,vView;varying float vHeight;
     uniform vec3 uColor;uniform float uGlow,uClipTop,uGrain,uRoughness,uDiffuser,uDayMix,uDirectional,uBeamStrength,uLampIntensity;
     uniform vec2 uBeamDirection;
@@ -59,8 +60,10 @@
           transmission=vec3(.11,.115,.12)+uColor*uGlow*uBeamStrength*segment*1.25*softEdge;
         }
         transmission+=vec3(.035,.026,.014);
-        transmission=mix(vec3(.035,.038,.042),transmission,uLampIntensity);
-        gl_FragColor=vec4(pow(toneMap(transmission),vec3(1.0/2.2)),1.0);
+        vec3 lit=pow(toneMap(transmission),vec3(1.0/2.2));
+        vec3 unlit=vec3(.09,.095,.105);
+        float visibleOutput=pow(clamp(uLampIntensity,0.0,1.0),1.35);
+        gl_FragColor=vec4(mix(unlit,lit,visibleOutput),1.0);
         return;
       }
       float grain=fract(sin(dot(floor(vPosition*6.0),vec3(12.9898,78.233,37.719)))*43758.5453);
@@ -135,7 +138,7 @@
   const lampProgram=program(lampVertex,lampFragment),sceneProgram=program(sceneVertex,sceneFragment);
   let personProgram=null,personLoc=null;
   function cameraLocations(p){return {eye:gl.getUniformLocation(p,'uEye'),right:gl.getUniformLocation(p,'uRight'),up:gl.getUniformLocation(p,'uUp'),forward:gl.getUniformLocation(p,'uForward'),aspect:gl.getUniformLocation(p,'uAspect')}}
-  const lampLoc={camera:cameraLocations(lampProgram),position:gl.getAttribLocation(lampProgram,'aPosition'),normal:gl.getAttribLocation(lampProgram,'aNormal'),color:gl.getUniformLocation(lampProgram,'uColor'),glow:gl.getUniformLocation(lampProgram,'uGlow'),clip:gl.getUniformLocation(lampProgram,'uClipTop'),grain:gl.getUniformLocation(lampProgram,'uGrain'),roughness:gl.getUniformLocation(lampProgram,'uRoughness'),diffuser:gl.getUniformLocation(lampProgram,'uDiffuser'),dayMix:gl.getUniformLocation(lampProgram,'uDayMix'),directional:gl.getUniformLocation(lampProgram,'uDirectional'),beamDirection:gl.getUniformLocation(lampProgram,'uBeamDirection'),beamStrength:gl.getUniformLocation(lampProgram,'uBeamStrength'),intensity:gl.getUniformLocation(lampProgram,'uLampIntensity')};
+  const lampLoc={camera:cameraLocations(lampProgram),position:gl.getAttribLocation(lampProgram,'aPosition'),normal:gl.getAttribLocation(lampProgram,'aNormal'),offset:gl.getUniformLocation(lampProgram,'uPartOffset'),color:gl.getUniformLocation(lampProgram,'uColor'),glow:gl.getUniformLocation(lampProgram,'uGlow'),clip:gl.getUniformLocation(lampProgram,'uClipTop'),grain:gl.getUniformLocation(lampProgram,'uGrain'),roughness:gl.getUniformLocation(lampProgram,'uRoughness'),diffuser:gl.getUniformLocation(lampProgram,'uDiffuser'),dayMix:gl.getUniformLocation(lampProgram,'uDayMix'),directional:gl.getUniformLocation(lampProgram,'uDirectional'),beamDirection:gl.getUniformLocation(lampProgram,'uBeamDirection'),beamStrength:gl.getUniformLocation(lampProgram,'uBeamStrength'),intensity:gl.getUniformLocation(lampProgram,'uLampIntensity')};
   const sceneLoc={camera:cameraLocations(sceneProgram),position:gl.getAttribLocation(sceneProgram,'aPosition'),uv:gl.getAttribLocation(sceneProgram,'aUV'),night:gl.getUniformLocation(sceneProgram,'uTextureNight'),day:gl.getUniformLocation(sceneProgram,'uTextureDay'),dayMix:gl.getUniformLocation(sceneProgram,'uDayMix'),ground:gl.getUniformLocation(sceneProgram,'uGround'),lightColor:gl.getUniformLocation(sceneProgram,'uLightColor'),directional:gl.getUniformLocation(sceneProgram,'uDirectional'),beamDirection:gl.getUniformLocation(sceneProgram,'uBeamDirection'),beamStrength:gl.getUniformLocation(sceneProgram,'uBeamStrength'),beamDistance:gl.getUniformLocation(sceneProgram,'uBeamDistance'),intensity:gl.getUniformLocation(sceneProgram,'uLampIntensity')};
   function preparePersonRenderer(){
     if(personProgram)return;
@@ -264,14 +267,15 @@
     draw();
   };
   overheadImage.src=window.BIOGLOW_OVERHEAD_IMAGE;
-  let yaw=0,elevation=.16,radius=72,frameX=0,drag=null,dayMix=0,dayTarget=0,fadeFrame=0;
-  let activeDemo=0,returnPose=null,wildlifeReturnPose=null,migrationReturnPose=null,cameraFrame=0;
+  let yaw=0,elevation=.16,radius=72,frameX=0,focusY=17,drag=null,dayMix=0,dayTarget=0,fadeFrame=0;
+  let activeDemo=0,returnPose=null,wildlifeReturnPose=null,migrationReturnPose=null,insideReturnPose=null,cameraFrame=0;
+  let explodeProgress=0,explodeFrame=0;
   const personPosition={x:personX,z:0};
   let personTarget=null,personPath=[],personRow=3,personFrame=1,personBob=0,walkPhase=0,walkFrame=0,lastWalkTime=0;
   function normalize(v){const l=Math.hypot(...v)||1;return v.map(x=>x/l)}
   function cross(a,b){return [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]}
   function camera(){
-    const target=[frameX,17,0],horizontal=Math.cos(elevation)*radius;
+    const target=[frameX,focusY,0],horizontal=Math.cos(elevation)*radius;
     const eye=[target[0]+Math.sin(yaw)*horizontal,target[1]+Math.sin(elevation)*radius,Math.cos(yaw)*horizontal];
     const forward=normalize(target.map((x,i)=>x-eye[i]));
     const right=[Math.cos(yaw),0,-Math.sin(yaw)];
@@ -387,7 +391,7 @@
       gl.uniform1f(sceneLoc.beamStrength,beamStrength);
       gl.uniform1f(sceneLoc.beamDistance,beamDistance);
       gl.uniform1f(sceneLoc.intensity,lampIntensity);
-      gl.uniform3fv(sceneLoc.lightColor,[[1,.72,.38],[1,.72,.38],[1,.8,.53],[1,.72,.38],[1,.72,.38]][mode]);
+      gl.uniform3fv(sceneLoc.lightColor,[[1,.72,.38],[1,.72,.38],[1,.8,.53],[1,.72,.38],[1,.72,.38],[1,.72,.38]][mode]);
       gl.enableVertexAttribArray(sceneLoc.position);gl.enableVertexAttribArray(sceneLoc.uv);
       for(const mesh of surfaces){
         gl.uniform1f(sceneLoc.ground,mesh.ground?1:0);
@@ -398,7 +402,7 @@
       gl.disableVertexAttribArray(sceneLoc.uv);gl.disableVertexAttribArray(sceneLoc.position);
     }
     const overheadProgress=Math.max(0,Math.min(1,(elevation-.74)/.55));
-    const overheadOpacity=overheadProgress*overheadProgress*(3-2*overheadProgress);
+    const overheadOpacity=mode===5?0:overheadProgress*overheadProgress*(3-2*overheadProgress);
     const personOpacity=Math.max(0,Math.min(1,(elevation-.9)/.45));
     if(personElement){
       if(mode===2&&personOpacity>.01){
@@ -449,10 +453,12 @@
     gl.uniform2fv(lampLoc.beamDirection,beamDirection);
     gl.uniform1f(lampLoc.beamStrength,beamStrength);
     gl.enableVertexAttribArray(lampLoc.position);gl.enableVertexAttribArray(lampLoc.normal);
-    const diffuserColors=[[1,.96,.82],[1,.96,.82],[1,.9,.65],[1,.96,.82],[1,.96,.82]];
+    const diffuserColors=[[1,.96,.82],[1,.96,.82],[1,.9,.65],[1,.96,.82],[1,.96,.82],[1,.96,.82]];
+    const explodedHeights={foot:0,diffuser:7,upper:21,dome:34};
     for(const mesh of meshes){
       gl.bindBuffer(gl.ARRAY_BUFFER,mesh.position);gl.vertexAttribPointer(lampLoc.position,3,gl.FLOAT,false,0,0);
       gl.bindBuffer(gl.ARRAY_BUFFER,mesh.normal);gl.vertexAttribPointer(lampLoc.normal,3,gl.FLOAT,false,0,0);
+      gl.uniform3fv(lampLoc.offset,[0,explodedHeights[mesh.part.key]*explodeProgress,0]);
       const isDiffuser=mesh.part.key==='diffuser';
       const litColor=diffuserColors[mode];
       const unlitColor=[.72,.76,.74];
@@ -486,9 +492,9 @@
   function animateCamera(to,onComplete){
     cancelAnimationFrame(cameraFrame);
     if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
-      yaw=to.yaw;elevation=to.elevation;radius=to.radius;frameX=to.frameX||0;draw();onComplete?.();return;
+      yaw=to.yaw;elevation=to.elevation;radius=to.radius;frameX=to.frameX||0;focusY=to.focusY??17;draw();onComplete?.();return;
     }
-    const from={yaw,elevation,radius,frameX},start=performance.now(),duration=1150;
+    const from={yaw,elevation,radius,frameX,focusY},start=performance.now(),duration=1150;
     function step(now){
       const progress=Math.min(1,(now-start)/duration);
       const eased=progress*progress*(3-2*progress);
@@ -496,29 +502,46 @@
       elevation=from.elevation+(to.elevation-from.elevation)*eased;
       radius=from.radius+(to.radius-from.radius)*eased;
       frameX=from.frameX+((to.frameX||0)-from.frameX)*eased;
+      focusY=from.focusY+((to.focusY??17)-from.focusY)*eased;
       draw();
       if(progress<1)cameraFrame=requestAnimationFrame(step);
       else onComplete?.();
     }
     cameraFrame=requestAnimationFrame(step);
   }
+  function animateExplosion(target){
+    cancelAnimationFrame(explodeFrame);
+    if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){explodeProgress=target;draw();return;}
+    const from=explodeProgress,start=performance.now(),duration=1150;
+    function step(now){
+      const progress=Math.min(1,(now-start)/duration);
+      const eased=progress*progress*(3-2*progress);
+      explodeProgress=from+(target-from)*eased;
+      draw();
+      if(progress<1)explodeFrame=requestAnimationFrame(step);
+    }
+    explodeFrame=requestAnimationFrame(step);
+  }
   function syncDemo(){
     const next=Number(experience.dataset.demo)||0;
     if(next!==activeDemo){
       experience.classList.remove('wildlife-visible');
+      animateExplosion(next===5?1:0);
       if(next===2){
         preparePersonRenderer();
-        returnPose=activeDemo===3?(wildlifeReturnPose||{yaw:0,elevation:.16,radius:72}):activeDemo===4?(migrationReturnPose||{yaw:0,elevation:.16,radius:72}):{yaw,elevation,radius,frameX};
+        returnPose=activeDemo===3?(wildlifeReturnPose||{yaw:0,elevation:.16,radius:72}):activeDemo===4?(migrationReturnPose||{yaw:0,elevation:.16,radius:72}):activeDemo===5?(insideReturnPose||{yaw:0,elevation:.16,radius:72}):{yaw,elevation,radius,frameX,focusY};
         wildlifeReturnPose=null;
         migrationReturnPose=null;
+        insideReturnPose=null;
         animateCamera({yaw:0,elevation:Math.PI/2,radius:500});
       }else if(next===3){
         if(activeDemo===2){
           cancelAnimationFrame(walkFrame);walkFrame=0;personTarget=null;personPath=[];personFrame=1;personBob=0;
           wildlifeReturnPose=returnPose||{yaw:0,elevation:.16,radius:72};
           returnPose=null;
-        }else wildlifeReturnPose=activeDemo===4?(migrationReturnPose||{yaw:0,elevation:.16,radius:72}):{yaw,elevation,radius,frameX};
+        }else wildlifeReturnPose=activeDemo===4?(migrationReturnPose||{yaw:0,elevation:.16,radius:72}):activeDemo===5?(insideReturnPose||{yaw:0,elevation:.16,radius:72}):{yaw,elevation,radius,frameX,focusY};
         migrationReturnPose=null;
+        insideReturnPose=null;
         animateCamera({yaw:0,elevation:.12,radius:105,frameX:12},()=>{
           if(experience.dataset.demo==='3')experience.classList.add('wildlife-visible');
         });
@@ -530,8 +553,22 @@
         }else if(activeDemo===3){
           migrationReturnPose=wildlifeReturnPose||{yaw:0,elevation:.16,radius:72};
           wildlifeReturnPose=null;
-        }else migrationReturnPose={yaw,elevation,radius,frameX};
+        }else migrationReturnPose=activeDemo===5?(insideReturnPose||{yaw:0,elevation:.16,radius:72}):{yaw,elevation,radius,frameX,focusY};
+        insideReturnPose=null;
         animateCamera({yaw:0,elevation:.12,radius:105,frameX:-17});
+      }else if(next===5){
+        if(activeDemo===2){
+          cancelAnimationFrame(walkFrame);walkFrame=0;personTarget=null;personPath=[];personFrame=1;personBob=0;
+          insideReturnPose=returnPose||{yaw:0,elevation:.16,radius:72};
+          returnPose=null;
+        }else if(activeDemo===3){
+          insideReturnPose=wildlifeReturnPose||{yaw:0,elevation:.16,radius:72};
+          wildlifeReturnPose=null;
+        }else if(activeDemo===4){
+          insideReturnPose=migrationReturnPose||{yaw:0,elevation:.16,radius:72};
+          migrationReturnPose=null;
+        }else insideReturnPose={yaw,elevation,radius,frameX,focusY};
+        animateCamera({yaw:0,elevation:.24,radius:145,frameX:0,focusY:35});
       }else if(activeDemo===2){
         cancelAnimationFrame(walkFrame);walkFrame=0;personTarget=null;personPath=[];personFrame=1;personBob=0;
         animateCamera(returnPose||{yaw:0,elevation:.16,radius:72});
@@ -542,6 +579,9 @@
       }else if(activeDemo===4){
         animateCamera(migrationReturnPose||{yaw:0,elevation:.16,radius:72});
         migrationReturnPose=null;
+      }else if(activeDemo===5){
+        animateCamera(insideReturnPose||{yaw:0,elevation:.16,radius:72});
+        insideReturnPose=null;
       }
       activeDemo=next;
     }
@@ -553,7 +593,7 @@
     if(!drag.moved&&Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)<5)return;
     if(!drag.moved){drag.moved=true;cancelAnimationFrame(cameraFrame)}
     yaw=Math.max(-.4,Math.min(.4,yaw+(e.clientX-drag.x)*.0035));
-    const minElevation=activeDemo===2?1.2:.02,maxElevation=activeDemo===2?Math.PI/2:.34;
+    const minElevation=activeDemo===2?1.2:.02,maxElevation=activeDemo===2?Math.PI/2:activeDemo===5?.9:.34;
     elevation=Math.max(minElevation,Math.min(maxElevation,elevation+(e.clientY-drag.y)*.0025));
     drag.x=e.clientX;drag.y=e.clientY;draw();
   });
@@ -565,7 +605,7 @@
     cancelAnimationFrame(cameraFrame);
     if(e.key==='ArrowLeft')yaw=Math.max(-.4,yaw-.04);
     if(e.key==='ArrowRight')yaw=Math.min(.4,yaw+.04);
-    if(e.key==='ArrowUp')elevation=Math.min(activeDemo===2?Math.PI/2:.34,elevation+.03);
+    if(e.key==='ArrowUp')elevation=Math.min(activeDemo===2?Math.PI/2:activeDemo===5?.9:.34,elevation+.03);
     if(e.key==='ArrowDown')elevation=Math.max(activeDemo===2?1.2:.02,elevation-.03);
     draw();
   });
