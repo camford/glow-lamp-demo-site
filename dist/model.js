@@ -66,7 +66,9 @@
         vec3 unlit=vec3(.09,.076,.06);
         // Convert low linear output to a visible display glow without changing the ground light.
         float visibleOutput=pow(clamp(uLampIntensity,0.0,1.0),.25);
-        gl_FragColor=vec4(mix(unlit,lit,visibleOutput),1.0);
+        float daylight=.58+.34*max(dot(n,normalize(vec3(-.52,.78,.58))),0.0);
+        vec3 daylightSurface=pow(toneMap(uColor*daylight),vec3(1.0/2.2));
+        gl_FragColor=vec4(mix(mix(unlit,lit,visibleOutput),daylightSurface,uDayMix),1.0);
         return;
       }
       float grain=fract(sin(dot(floor(vPosition*6.0),vec3(12.9898,78.233,37.719)))*43758.5453);
@@ -153,7 +155,7 @@
   const specs=[
     {key:'foot',diameter:198,z:0,heightScale:1,color:[.055,.059,.063],glow:0},
     {key:'diffuser',diameter:25,z:15.1,heightScale:2,color:[1,1,1],glow:.65},
-    {key:'upper',diameter:25,z:23.1,heightScale:1,radialScale:.93,color:[.05,.054,.058],glow:0},
+    {key:'upper',diameter:25,z:19.2,heightScale:1,radialScale:.93,color:[.05,.054,.058],glow:0},
     {key:'dome',diameter:25,z:23.1,heightScale:1,color:[.055,.059,.063],glow:0}
   ];
   function buffer(data){const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);return b}
@@ -183,21 +185,24 @@
     for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
     const view=new DataView(bytes.buffer),count=view.getUint32(80,true);
     if(84+count*50!==bytes.length)throw Error('Invalid STL: '+part.key);
-    let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity,minZ=Infinity;
+    let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity,minZ=Infinity,maxZ=-Infinity;
     for(let t=0;t<count;t++)for(let j=0;j<3;j++){
       const o=84+t*50+12+j*12,x=view.getFloat32(o,true),y=view.getFloat32(o+4,true),z=view.getFloat32(o+8,true);
-      minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);minZ=Math.min(minZ,z);
+      minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);minZ=Math.min(minZ,z);maxZ=Math.max(maxZ,z);
     }
     const cx=(minX+maxX)/2,cy=(minY+maxY)/2,scale=25/part.diameter;
+    // The upper insert was printed flange-down; in the lamp its flange faces the dome.
+    const flipUpper=part.key==='upper';
     const positions=new Float32Array(count*9),normals=new Float32Array(count*9);
     for(let t=0;t<count;t++){
       const o=84+t*50,nx=view.getFloat32(o,true),ny=view.getFloat32(o+4,true),nz=view.getFloat32(o+8,true),len=Math.hypot(nx,ny,nz)||1;
       for(let j=0;j<3;j++){
         const v=o+12+j*12,i=t*9+j*3;
         positions[i]=(view.getFloat32(v,true)-cx)*scale*(part.radialScale||1);
-        positions[i+1]=(view.getFloat32(v+8,true)-minZ)*scale*part.heightScale+part.z;
-        positions[i+2]=-(view.getFloat32(v+4,true)-cy)*scale*(part.radialScale||1);
-        normals[i]=nx/len;normals[i+1]=nz/len;normals[i+2]=-ny/len;
+        const rawZ=view.getFloat32(v+8,true);
+        positions[i+1]=(flipUpper?maxZ-rawZ:rawZ-minZ)*scale*part.heightScale+part.z;
+        positions[i+2]=(flipUpper?1:-1)*(view.getFloat32(v+4,true)-cy)*scale*(part.radialScale||1);
+        normals[i]=nx/len;normals[i+1]=(flipUpper?-nz:nz)/len;normals[i+2]=(flipUpper?ny:-ny)/len;
       }
     }
     const visible=(part.key==='diffuser'||part.key==='dome')?outerSkin(part.key):{positions,normals};
