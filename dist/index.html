@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0c1613">
+  <meta name="description" content="BioGlow interactive field experience">
+  <title>BioGlow · Field experience</title>
+  <link rel="preload" as="image" href="assets/night-garden.png">
+  <link rel="stylesheet" href="scene.css">
+  <script src="script.js" defer></script>
+  <script src="model-data.js" defer></script>
+  <script src="scene-image.js" defer></script>
+  <script src="scene-day-image.js" defer></script>
+  <script src="overhead-image.js" defer></script>
+  <script src="model.js" defer></script>
+</head>
+<body>
+  <main class="experience" data-demo="0" data-light="night" data-migration-intensity="1">
+    <canvas class="scene-view" aria-label="Interactive 3D garden scene centered on the BioGlow lamp. Drag to look around. In the directional light view, click the ground to move the person." tabindex="0"></canvas>
+    <div class="walking-person" aria-hidden="true"></div>
+    <div class="wildlife-layer" inert>
+      <button class="wildlife-animal wildlife-coyote" type="button" data-animal="coyote" aria-label="Hear the coyote and log a sighting"><img src="assets/wildlife-coyote.png" alt=""></button>
+      <button class="wildlife-animal wildlife-owl" type="button" data-animal="owl" aria-label="Hear the great horned owl and log a sighting"><img src="assets/wildlife-great-horned-owl.png" alt=""></button>
+      <button class="wildlife-animal wildlife-frog" type="button" data-animal="frog" aria-label="Hear the Sierran tree frog and log a sighting"><img src="assets/wildlife-sierran-tree-frog.png" alt=""></button>
+      <button class="wildlife-animal wildlife-raccoon" type="button" data-animal="raccoon" aria-label="Hear the raccoon and log a sighting"><img src="assets/wildlife-raccoon.png" alt=""></button>
+    </div>
+    <section class="glow-phone" aria-label="G.L.O.W. app, Local wildlife" inert>
+      <div class="phone-frame">
+        <div class="phone-screen">
+          <div class="phone-island" aria-hidden="true"></div>
+          <div class="phone-status"><span class="phone-clock">9:41</span><span class="phone-signals" aria-hidden="true">●●●  ▰</span></div>
+          <div class="app-header"><div class="app-brand">G.L.O.W<span class="app-brand-dot">.</span></div><div class="app-header-actions"><span class="app-live"><i></i> LIVE</span><a class="audio-credits-link" href="audio-credits.html" target="_blank" rel="noopener" aria-label="Animal recording credits">ⓘ</a></div></div>
+          <div class="app-content">
+            <p class="app-overline">FIELD STATION / 01</p>
+            <h2>Local<br>wildlife<span>.</span></h2>
+            <p class="app-description">Tap an animal in the scene to hear its call and record a sighting.</p>
+            <div class="app-list-heading"><span>RECENT SIGHTINGS</span><span class="app-count" aria-label="0 sightings">00</span></div>
+            <div class="app-sightings" role="log" aria-label="Wildlife sightings" aria-live="polite">
+              <div class="app-empty"><span class="app-empty-icon" aria-hidden="true">✳</span><span>No sightings yet.<br>Explore the garden.</span></div>
+            </div>
+          </div>
+          <div class="phone-home" aria-hidden="true"></div>
+        </div>
+      </div>
+    </section>
+    <section class="migration-phone" aria-label="G.L.O.W. app, Bay Area migration map" inert>
+      <div class="phone-frame">
+        <div class="phone-screen migration-screen">
+          <div class="phone-island" aria-hidden="true"></div>
+          <div class="phone-status"><span class="phone-clock">9:41</span><span class="phone-signals" aria-hidden="true">●●●  ▰</span></div>
+          <div class="app-header"><div class="app-brand">G.L.O.W<span class="app-brand-dot">.</span></div><span class="app-live"><i></i> LIVE</span></div>
+          <div class="migration-heading"><span class="app-overline">MIGRATION WATCH / BAY AREA</span><h2>Birds nearby<span>.</span></h2><p>The flock passes the lamp automatically.</p></div>
+          <div class="migration-map" aria-label="Bay Area map centered on our location with a flock passing over it">
+            <div class="migration-tile-layer" aria-hidden="true"></div>
+            <div class="migration-location" aria-label="Our location"><span class="migration-location-pulse"></span><span class="migration-location-dot"></span><span class="migration-location-label">OUR LOCATION</span></div>
+            <div class="migration-flock" aria-hidden="true" style="left:23%;top:7%">
+              <svg viewBox="0 0 92 66" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M26 10q7-8 14 0q7-8 14 0"/><path d="M5 28q6-7 12 0q6-7 12 0"/><path d="M47 29q8-9 16 0q8-9 16 0"/><path d="M20 50q7-8 14 0q7-8 14 0"/><path d="M63 52q5-6 10 0q5-6 10 0"/></g></svg>
+            </div>
+            <a class="migration-attribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>
+          </div>
+          <div class="migration-footer"><span><i class="migration-footer-dot"></i> LAMP OUTPUT</span><output class="migration-output">100%</output></div>
+          <div class="phone-home" aria-hidden="true"></div>
+        </div>
+      </div>
+    </section>
+    <img class="lamp-fallback" src="assets/bioglow-lamp-dome.png" alt="" aria-hidden="true">
+    <div class="scene-atmosphere" aria-hidden="true"></div>
+    <nav class="demo-nav" aria-label="Explore BioGlow demos">
+      <div class="demo-tabs" role="tablist" aria-label="BioGlow demos">
+        <button class="demo-tab" id="tab-1" type="button" role="tab" aria-selected="true" tabindex="0" data-index="0">Intro</button>
+        <button class="demo-tab" id="tab-2" type="button" role="tab" aria-selected="false" tabindex="-1" data-index="1">Auto off</button>
+        <button class="demo-tab" id="tab-3" type="button" role="tab" aria-selected="false" tabindex="-1" data-index="2">Directional light</button>
+        <button class="demo-tab" id="tab-4" type="button" role="tab" aria-selected="false" tabindex="-1" data-index="3">Wildlife detection</button>
+        <button class="demo-tab" id="tab-5" type="button" role="tab" aria-selected="false" tabindex="-1" data-index="4">Migration response</button>
+      </div>
+    </nav>
+    <div class="light-switch" role="group" aria-label="Choose day or night" aria-hidden="true" data-light="night">
+      <span class="light-switch-indicator" aria-hidden="true"></span>
+      <button type="button" data-light-choice="day" aria-pressed="false" disabled>Day</button>
+      <button type="button" data-light-choice="night" aria-pressed="true" disabled>Night</button>
+    </div>
+  </main>
+</body>
+</html>
