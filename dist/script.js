@@ -1,7 +1,6 @@
 const experience = document.querySelector('.experience');
 const tabs = [...document.querySelectorAll('.demo-tab')];
 const lightSwitch = document.querySelector('.light-switch');
-const lightChoices = [...document.querySelectorAll('[data-light-choice]')];
 const wildlifeLayer = document.querySelector('.wildlife-layer');
 const glowPhone = document.querySelector('.glow-phone');
 const migrationPhone = document.querySelector('.migration-phone');
@@ -15,7 +14,7 @@ function selectDemo(index, moveFocus = false) {
   experience.dataset.demo = String(index);
   experience.dataset.light = conditions ? conditionsLight : 'night';
   lightSwitch.setAttribute('aria-hidden', String(!conditions));
-  lightChoices.forEach(button => { button.disabled = !conditions; });
+  lightSwitch.disabled = !conditions;
   wildlifeLayer.inert = !wildlife;
   glowPhone.inert = !wildlife;
   migrationPhone.inert = index !== 4;
@@ -33,11 +32,11 @@ function setLight(light) {
   if (light !== 'day' && light !== 'night') return;
   conditionsLight = light;
   lightSwitch.dataset.light = light;
-  lightChoices.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.lightChoice === light)));
+  lightSwitch.setAttribute('aria-checked', String(light === 'night'));
   if (experience.dataset.demo === '1') experience.dataset.light = light;
 }
 
-lightChoices.forEach(button => button.addEventListener('click', () => setLight(button.dataset.lightChoice)));
+lightSwitch.addEventListener('click', () => setLight(conditionsLight === 'night' ? 'day' : 'night'));
 
 tabs.forEach((tab, index) => {
   tab.addEventListener('click', () => selectDemo(index));

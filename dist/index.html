@@ -7,17 +7,17 @@
   <meta name="description" content="BioGlow interactive field experience">
   <title>BioGlow · Field experience</title>
   <link rel="preload" as="image" href="assets/night-garden.png">
-  <link rel="stylesheet" href="scene.css">
-  <script src="script.js" defer></script>
+  <link rel="stylesheet" href="scene.css?v=4">
+  <script src="script.js?v=2" defer></script>
   <script src="model-data.js" defer></script>
   <script src="scene-image.js" defer></script>
   <script src="scene-day-image.js" defer></script>
   <script src="overhead-image.js" defer></script>
-  <script src="model.js?v=3" defer></script>
+  <script src="model.js?v=9" defer></script>
 </head>
 <body>
   <main class="experience" data-demo="0" data-light="night" data-migration-intensity="1">
-    <canvas class="scene-view" aria-label="Interactive 3D garden scene centered on the BioGlow lamp. Drag to look around. In the directional light view, click the ground to move the person." tabindex="0"></canvas>
+    <canvas class="scene-view" aria-label="Interactive 3D garden scene. Drag to look around in most views. In Directional light, tap the ground or use arrow keys to move the person; the camera stays fixed." tabindex="0"></canvas>
     <div class="walking-person" aria-hidden="true"></div>
     <div class="wildlife-layer" inert>
       <button class="wildlife-animal wildlife-coyote" type="button" data-animal="coyote" aria-label="Hear the coyote and log a sighting"><img src="assets/wildlife-coyote.png" alt=""></button>
@@ -64,11 +64,10 @@
         </div>
       </div>
     </section>
-    <img class="lamp-fallback" src="assets/bioglow-lamp-dome.png" alt="" aria-hidden="true">
     <div class="scene-atmosphere" aria-hidden="true"></div>
     <nav class="demo-nav" aria-label="Explore BioGlow demos">
       <div class="demo-tabs" role="tablist" aria-label="BioGlow demos">
-        <button class="demo-tab" id="tab-1" type="button" role="tab" aria-selected="true" tabindex="0" data-index="0"><span class="tab-title">Intro</span></button>
+        <button class="demo-tab" id="tab-1" type="button" role="tab" aria-selected="true" tabindex="0" data-index="0"><span class="tab-title">G.L.O.W.</span></button>
         <button class="demo-tab" id="tab-2" type="button" role="tab" aria-selected="false" tabindex="-1" data-index="1"><span class="tab-title">Auto off</span><span class="tab-status" data-status="implemented">Implemented</span></button>
         <button class="demo-tab" id="tab-3" type="button" role="tab" aria-selected="false" tabindex="-1" data-index="2"><span class="tab-title">Directional light</span><span class="tab-status" data-status="partial">Partially implemented</span></button>
         <button class="demo-tab" id="tab-4" type="button" role="tab" aria-selected="false" tabindex="-1" data-index="3"><span class="tab-title">Wildlife detection</span><span class="tab-status" data-status="implemented">Implemented</span></button>
@@ -76,11 +75,11 @@
         <button class="demo-tab" id="tab-6" type="button" role="tab" aria-selected="false" tabindex="-1" data-index="5"><span class="tab-title">See inside</span></button>
       </div>
     </nav>
-    <div class="light-switch" role="group" aria-label="Choose day or night" aria-hidden="true" data-light="night">
+    <button class="light-switch" type="button" role="switch" aria-label="Night mode" aria-checked="true" aria-hidden="true" data-light="night" disabled>
       <span class="light-switch-indicator" aria-hidden="true"></span>
-      <button type="button" data-light-choice="day" aria-pressed="false" disabled>Day</button>
-      <button type="button" data-light-choice="night" aria-pressed="true" disabled>Night</button>
-    </div>
+      <span class="light-switch-label" data-light-choice="day" aria-hidden="true">Day</span>
+      <span class="light-switch-label" data-light-choice="night" aria-hidden="true">Night</span>
+    </button>
     <footer class="project-credit">a Team Ultraviolet project</footer>
     <div class="rotate-hint" role="note"><span class="rotate-hint-icon" aria-hidden="true">↻</span><span>Rotate your phone to landscape for the full experience.</span></div>
   </main>

@@ -27,7 +27,7 @@
     ${cameraSource}
     void main(){vec3 position=aPosition+uPartOffset;vHeight=aPosition.y;vNormal=aNormal;vPosition=position;vView=uEye-position;gl_Position=project(position);}`;
   const lampFragment=`precision mediump float;varying vec3 vNormal,vPosition,vView;varying float vHeight;
-    uniform vec3 uColor;uniform float uGlow,uClipTop,uGrain,uRoughness,uDiffuser,uDayMix,uDirectional,uBeamStrength,uLampIntensity;
+    uniform vec3 uColor,uLightColor;uniform float uGlow,uClipTop,uGrain,uRoughness,uDiffuser,uDayMix,uDirectional,uBeamStrength,uLampIntensity;
     uniform vec2 uBeamDirection;
     const float PI=3.14159265;
     vec3 toneMap(vec3 x){
@@ -57,12 +57,15 @@
         vec3 transmission=uColor*(.38+uGlow*.88)*softEdge;
         if(uDirectional>.5){
           float segment=smoothstep(.68,.91,dot(normalize(vPosition.xz),uBeamDirection));
-          transmission=vec3(.11,.115,.12)+uColor*uGlow*uBeamStrength*segment*1.25*softEdge;
+          transmission=vec3(.11)+uColor*uGlow*uBeamStrength*segment*1.25*softEdge;
         }
         transmission+=vec3(.035,.026,.014);
-        vec3 lit=pow(toneMap(transmission),vec3(1.0/2.2));
-        vec3 unlit=vec3(.09,.095,.105);
-        float visibleOutput=pow(clamp(uLampIntensity,0.0,1.0),1.35);
+        // A bright diffuser reads nearly white; a dim one retains a warmer glow.
+        float warmTint=.20+.30*(1.0-clamp(uLampIntensity,0.0,1.0));
+        vec3 lit=pow(toneMap(transmission),vec3(1.0/2.2))*mix(vec3(1.0),uLightColor,warmTint);
+        vec3 unlit=vec3(.09,.076,.06);
+        // Convert low linear output to a visible display glow without changing the ground light.
+        float visibleOutput=pow(clamp(uLampIntensity,0.0,1.0),.25);
         gl_FragColor=vec4(mix(unlit,lit,visibleOutput),1.0);
         return;
       }
@@ -138,7 +141,7 @@
   const lampProgram=program(lampVertex,lampFragment),sceneProgram=program(sceneVertex,sceneFragment);
   let personProgram=null,personLoc=null;
   function cameraLocations(p){return {eye:gl.getUniformLocation(p,'uEye'),right:gl.getUniformLocation(p,'uRight'),up:gl.getUniformLocation(p,'uUp'),forward:gl.getUniformLocation(p,'uForward'),aspect:gl.getUniformLocation(p,'uAspect')}}
-  const lampLoc={camera:cameraLocations(lampProgram),position:gl.getAttribLocation(lampProgram,'aPosition'),normal:gl.getAttribLocation(lampProgram,'aNormal'),offset:gl.getUniformLocation(lampProgram,'uPartOffset'),color:gl.getUniformLocation(lampProgram,'uColor'),glow:gl.getUniformLocation(lampProgram,'uGlow'),clip:gl.getUniformLocation(lampProgram,'uClipTop'),grain:gl.getUniformLocation(lampProgram,'uGrain'),roughness:gl.getUniformLocation(lampProgram,'uRoughness'),diffuser:gl.getUniformLocation(lampProgram,'uDiffuser'),dayMix:gl.getUniformLocation(lampProgram,'uDayMix'),directional:gl.getUniformLocation(lampProgram,'uDirectional'),beamDirection:gl.getUniformLocation(lampProgram,'uBeamDirection'),beamStrength:gl.getUniformLocation(lampProgram,'uBeamStrength'),intensity:gl.getUniformLocation(lampProgram,'uLampIntensity')};
+  const lampLoc={camera:cameraLocations(lampProgram),position:gl.getAttribLocation(lampProgram,'aPosition'),normal:gl.getAttribLocation(lampProgram,'aNormal'),offset:gl.getUniformLocation(lampProgram,'uPartOffset'),color:gl.getUniformLocation(lampProgram,'uColor'),lightColor:gl.getUniformLocation(lampProgram,'uLightColor'),glow:gl.getUniformLocation(lampProgram,'uGlow'),clip:gl.getUniformLocation(lampProgram,'uClipTop'),grain:gl.getUniformLocation(lampProgram,'uGrain'),roughness:gl.getUniformLocation(lampProgram,'uRoughness'),diffuser:gl.getUniformLocation(lampProgram,'uDiffuser'),dayMix:gl.getUniformLocation(lampProgram,'uDayMix'),directional:gl.getUniformLocation(lampProgram,'uDirectional'),beamDirection:gl.getUniformLocation(lampProgram,'uBeamDirection'),beamStrength:gl.getUniformLocation(lampProgram,'uBeamStrength'),intensity:gl.getUniformLocation(lampProgram,'uLampIntensity')};
   const sceneLoc={camera:cameraLocations(sceneProgram),position:gl.getAttribLocation(sceneProgram,'aPosition'),uv:gl.getAttribLocation(sceneProgram,'aUV'),night:gl.getUniformLocation(sceneProgram,'uTextureNight'),day:gl.getUniformLocation(sceneProgram,'uTextureDay'),dayMix:gl.getUniformLocation(sceneProgram,'uDayMix'),ground:gl.getUniformLocation(sceneProgram,'uGround'),lightColor:gl.getUniformLocation(sceneProgram,'uLightColor'),directional:gl.getUniformLocation(sceneProgram,'uDirectional'),beamDirection:gl.getUniformLocation(sceneProgram,'uBeamDirection'),beamStrength:gl.getUniformLocation(sceneProgram,'uBeamStrength'),beamDistance:gl.getUniformLocation(sceneProgram,'uBeamDistance'),intensity:gl.getUniformLocation(sceneProgram,'uLampIntensity')};
   function preparePersonRenderer(){
     if(personProgram)return;
@@ -149,7 +152,7 @@
   }
   const specs=[
     {key:'foot',diameter:198,z:0,heightScale:1,color:[.055,.059,.063],glow:0},
-    {key:'diffuser',diameter:25,z:15.1,heightScale:2,color:[1,.96,.82],glow:.65},
+    {key:'diffuser',diameter:25,z:15.1,heightScale:2,color:[1,1,1],glow:.65},
     {key:'upper',diameter:25,z:23.1,heightScale:1,radialScale:.93,color:[.05,.054,.058],glow:0},
     {key:'dome',diameter:25,z:23.1,heightScale:1,color:[.055,.059,.063],glow:0}
   ];
@@ -267,6 +270,8 @@
     draw();
   };
   overheadImage.src=window.BIOGLOW_OVERHEAD_IMAGE;
+  // Approximate 2700 K tungsten light in display RGB. All demos share this hue.
+  const lampLightColor=[1,.69,.4];
   let yaw=0,elevation=.16,radius=72,frameX=0,focusY=17,drag=null,dayMix=0,dayTarget=0,fadeFrame=0;
   let activeDemo=0,returnPose=null,wildlifeReturnPose=null,migrationReturnPose=null,insideReturnPose=null,cameraFrame=0;
   let explodeProgress=0,explodeFrame=0;
@@ -351,6 +356,7 @@
     gl.uniform3fv(loc.eye,c.eye);gl.uniform3fv(loc.right,c.right);gl.uniform3fv(loc.up,c.up);gl.uniform3fv(loc.forward,c.forward);gl.uniform1f(loc.aspect,canvas.width/canvas.height);
   }
   function draw(){
+    if(!imageReady)return;
     const bounds=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);
     const w=Math.max(1,Math.round(bounds.width*dpr)),h=Math.max(1,Math.round(bounds.height*dpr));
     if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h)}
@@ -358,7 +364,7 @@
     gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
     const c=camera();
     const mode=Number(experience.dataset.demo)||0;
-    const lampIntensity=mode===4?Number(experience.dataset.migrationIntensity||1):1;
+    const lampIntensity=(mode===4?Number(experience.dataset.migrationIntensity||1):1)*(mode===1?1-dayMix:1);
     const beamDistance=Math.max(1,Math.hypot(personPosition.x,personPosition.z));
     const beamDirection=[personPosition.x/beamDistance,personPosition.z/beamDistance];
     const beamProgress=Math.max(0,Math.min(1,(beamDistance-35)/150));
@@ -391,7 +397,7 @@
       gl.uniform1f(sceneLoc.beamStrength,beamStrength);
       gl.uniform1f(sceneLoc.beamDistance,beamDistance);
       gl.uniform1f(sceneLoc.intensity,lampIntensity);
-      gl.uniform3fv(sceneLoc.lightColor,[[1,.72,.38],[1,.72,.38],[1,.8,.53],[1,.72,.38],[1,.72,.38],[1,.72,.38]][mode]);
+      gl.uniform3fv(sceneLoc.lightColor,lampLightColor);
       gl.enableVertexAttribArray(sceneLoc.position);gl.enableVertexAttribArray(sceneLoc.uv);
       for(const mesh of surfaces){
         gl.uniform1f(sceneLoc.ground,mesh.ground?1:0);
@@ -447,22 +453,21 @@
       gl.depthMask(true);gl.disable(gl.BLEND);
     }
     gl.useProgram(lampProgram);setCamera(lampLoc.camera,c);
+    gl.uniform3fv(lampLoc.lightColor,lampLightColor);
     gl.uniform1f(lampLoc.dayMix,dayMix);
     gl.uniform1f(lampLoc.intensity,lampIntensity);
     gl.uniform1f(lampLoc.directional,mode===2?1:0);
     gl.uniform2fv(lampLoc.beamDirection,beamDirection);
     gl.uniform1f(lampLoc.beamStrength,beamStrength);
     gl.enableVertexAttribArray(lampLoc.position);gl.enableVertexAttribArray(lampLoc.normal);
-    const diffuserColors=[[1,.96,.82],[1,.96,.82],[1,.9,.65],[1,.96,.82],[1,.96,.82],[1,.96,.82]];
     const explodedHeights={foot:0,diffuser:7,upper:21,dome:34};
     for(const mesh of meshes){
       gl.bindBuffer(gl.ARRAY_BUFFER,mesh.position);gl.vertexAttribPointer(lampLoc.position,3,gl.FLOAT,false,0,0);
       gl.bindBuffer(gl.ARRAY_BUFFER,mesh.normal);gl.vertexAttribPointer(lampLoc.normal,3,gl.FLOAT,false,0,0);
       gl.uniform3fv(lampLoc.offset,[0,explodedHeights[mesh.part.key]*explodeProgress,0]);
       const isDiffuser=mesh.part.key==='diffuser';
-      const litColor=diffuserColors[mode];
-      const unlitColor=[.72,.76,.74];
-      gl.uniform3fv(lampLoc.color,isDiffuser?litColor.map((value,i)=>value*(1-dayMix)+unlitColor[i]*dayMix):mesh.part.color);
+      const unlitColor=[.74,.74,.71];
+      gl.uniform3fv(lampLoc.color,isDiffuser?mesh.part.color.map((value,i)=>value*(1-dayMix)+unlitColor[i]*dayMix):mesh.part.color);
       gl.uniform1f(lampLoc.glow,mesh.part.glow*(1-dayMix));
       gl.uniform1f(lampLoc.diffuser,isDiffuser?1:0);
       gl.uniform1f(lampLoc.clip,mesh.part.key==='foot'?15.1:0);
@@ -471,7 +476,7 @@
       gl.drawArrays(gl.TRIANGLES,0,mesh.count);
     }
     gl.disableVertexAttribArray(lampLoc.position);gl.disableVertexAttribArray(lampLoc.normal);
-    if(gl.getError()===gl.NO_ERROR)experience.classList.add('webgl-ready');
+    if(!experience.classList.contains('scene-ready')&&gl.getError()===gl.NO_ERROR)experience.classList.add('scene-ready');
   }
   function syncLight(){
     const next=experience.dataset.light==='day'?1:0;
@@ -587,26 +592,35 @@
     }
     syncLight();
   }
-  canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,moved:false};canvas.setPointerCapture(e.pointerId)});
+  canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,moved:false,locked:activeDemo===2};canvas.setPointerCapture(e.pointerId)});
   canvas.addEventListener('pointermove',e=>{
     if(!drag)return;
+    if(drag.locked){
+      if(Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)>=5)drag.moved=true;
+      return;
+    }
     if(!drag.moved&&Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)<5)return;
     if(!drag.moved){drag.moved=true;cancelAnimationFrame(cameraFrame)}
     yaw=Math.max(-.4,Math.min(.4,yaw+(e.clientX-drag.x)*.0035));
-    const minElevation=activeDemo===2?1.2:.02,maxElevation=activeDemo===2?Math.PI/2:activeDemo===5?.9:.34;
+    const minElevation=.02,maxElevation=activeDemo===5?.9:.34;
     elevation=Math.max(minElevation,Math.min(maxElevation,elevation+(e.clientY-drag.y)*.0025));
     drag.x=e.clientX;drag.y=e.clientY;draw();
   });
-  canvas.addEventListener('pointerup',e=>{if(drag&&!drag.moved&&activeDemo===2)startWalk(groundPoint(e.clientX,e.clientY));drag=null});
+  canvas.addEventListener('pointerup',e=>{if(drag?.locked&&!drag.moved&&activeDemo===2)startWalk(groundPoint(e.clientX,e.clientY));drag=null});
   canvas.addEventListener('pointercancel',()=>{drag=null});
   canvas.addEventListener('keydown',e=>{
     if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))return;
     e.preventDefault();
+    if(activeDemo===2){
+      const step=35;
+      startWalk({x:personPosition.x+(e.key==='ArrowRight'?step:e.key==='ArrowLeft'?-step:0),z:personPosition.z+(e.key==='ArrowDown'?step:e.key==='ArrowUp'?-step:0)});
+      return;
+    }
     cancelAnimationFrame(cameraFrame);
     if(e.key==='ArrowLeft')yaw=Math.max(-.4,yaw-.04);
     if(e.key==='ArrowRight')yaw=Math.min(.4,yaw+.04);
-    if(e.key==='ArrowUp')elevation=Math.min(activeDemo===2?Math.PI/2:activeDemo===5?.9:.34,elevation+.03);
-    if(e.key==='ArrowDown')elevation=Math.max(activeDemo===2?1.2:.02,elevation-.03);
+    if(e.key==='ArrowUp')elevation=Math.min(activeDemo===5?.9:.34,elevation+.03);
+    if(e.key==='ArrowDown')elevation=Math.max(.02,elevation-.03);
     draw();
   });
   new ResizeObserver(draw).observe(canvas);
