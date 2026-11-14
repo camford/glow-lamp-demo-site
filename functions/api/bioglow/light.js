@@ -4,7 +4,7 @@ export async function onRequestGet({env}) {
   const latest = await fetchLatest(env);
   const lighting = latest.data?.lighting;
   if (latest.http_status !== 200 || !lighting || typeof lighting !== 'object') {
-    return jsonResponse({status:'error',on:null,color:null},502);
+    return jsonResponse({status:'error',on:null,color:null},200);
   }
 
   const color = typeof lighting.color === 'string' && /^#[0-9a-f]{6}$/i.test(lighting.color)
@@ -17,5 +17,5 @@ export async function onRequestGet({env}) {
     brightness:typeof lighting.brightness === 'number' && Number.isFinite(lighting.brightness) ? lighting.brightness : null,
     mode:typeof lighting.mode === 'string' ? lighting.mode : null,
   };
-  return jsonResponse(result,result.status === 'ok' ? 200 : 502);
+  return jsonResponse(result,200);
 }

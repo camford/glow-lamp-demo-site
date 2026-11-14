@@ -46,7 +46,7 @@ export async function getWildlifeDetections(env) {
     recordings_analyzed:[...counts.values()].reduce((total,item) => total+item.count,0),
     species_detected:counts.size,
     animals,
-  },response.http_status===200?200:502);
+  },200);
 }
 
 function validScientificName(value) {
@@ -113,7 +113,7 @@ export async function getWildlifeImage(scientificName, env, preferredCommonName 
   const cached = wildlifeImageCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) return jsonResponse(cached.value,200);
   const accessKey = typeof env?.UNSPLASH_ACCESS_KEY === 'string' ? env.UNSPLASH_ACCESS_KEY.trim() : '';
-  if (!accessKey) return jsonResponse({error:'Unsplash image search is not configured.'},503);
+  if (!accessKey) return jsonResponse({status:'error',error:'Unsplash image search is not configured.'},200);
 
   const taxon = commonName ? {common_name:commonName} : await lookupTaxon(name);
   const searchName = taxon.common_name && taxon.common_name !== name ? taxon.common_name : name;
@@ -123,7 +123,7 @@ export async function getWildlifeImage(scientificName, env, preferredCommonName 
       headers:{Accept:'application/json',Authorization:`Client-ID ${accessKey}`},
       signal:AbortSignal.timeout(10000),
     });
-    if (!response.ok) return jsonResponse({error:`Unsplash image search returned ${response.status}.`},502);
+    if (!response.ok) return jsonResponse({status:'error',error:`Unsplash image search returned ${response.status}.`},200);
     const data = await response.json();
     const photos = Array.isArray(data?.results) ? data.results : [];
     for (const photo of photos) {
@@ -135,6 +135,7 @@ export async function getWildlifeImage(scientificName, env, preferredCommonName 
       attributionUrl.searchParams.set('utm_source','bioglow_demo');
       attributionUrl.searchParams.set('utm_medium','referral');
       const value = {
+        status:'ok',
         common_name:taxon.common_name || name,
         image_url:imageUrl,
         image_attribution:`Photo by ${String(photo.user.name || 'Unsplash photographer').slice(0,100)} on Unsplash`,
@@ -144,8 +145,8 @@ export async function getWildlifeImage(scientificName, env, preferredCommonName 
       wildlifeImageCache.set(cacheKey,{value,expiresAt:Date.now()+24*60*60*1000});
       return jsonResponse(value,200);
     }
-    return jsonResponse({error:'Unsplash has no matching animal photos.'},404);
+    return jsonResponse({status:'error',error:'Unsplash has no matching animal photos.'},200);
   } catch {
-    return jsonResponse({error:'Unable to reach Unsplash image search.'},502);
+    return jsonResponse({status:'error',error:'Unable to reach Unsplash image search.'},200);
   }
 }

@@ -25,7 +25,7 @@ export async function fetchStationJson(env, endpoint, {method = 'GET', body} = {
     return {http_status:400,data:{error:'Unsupported station route or method'}};
   }
   try {
-    const headers = new Headers({Accept:'application/json'});
+    const headers = new Headers({Accept:'application/json','User-Agent':'Mozilla/5.0 BioGlow-dashboard/1.0'});
     if (body !== undefined) headers.set('Content-Type','application/json');
     const response = await fetch(`${stationApiBase(env)}${path}`, {
       method,

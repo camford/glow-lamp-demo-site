@@ -69,7 +69,7 @@ async function readDirectionState() {
   try {
     const response = await fetch('/api/bioglow/direction', { cache:'no-store' });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.message || 'The station direction service is unavailable.');
+    if (!response.ok || result.status !== 'ok') throw new Error(result.message || 'The station direction service is unavailable.');
     if (Number.isInteger(result.max_beam_width)) directionMaxBeamWidth = result.max_beam_width;
     showDirectionStatus(result.mode === 'manual_control'
       ? 'The station is in manual control. Switch modes on the Pi before steering it here.'

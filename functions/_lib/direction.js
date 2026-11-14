@@ -16,7 +16,7 @@ export async function readDirection(env) {
     alignment:direction.alignment ?? null,
     beam_width:direction.beam_width ?? null,
     max_beam_width:direction.max_beam_width ?? null,
-  },ok?200:502);
+  },200);
 }
 
 export async function controlDirection(request, env) {

@@ -465,7 +465,7 @@ class BioGlowHandler(SimpleHTTPRequestHandler):
         if self.path == "/api/bioglow/light":
             result = live_light_data()
             payload = json.dumps(result, separators=(",", ":")).encode()
-            self.send_response(200 if result["status"] == "ok" else 502)
+            self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Cache-Control", "no-store")
             self.send_header("Content-Length", str(len(payload)))
@@ -475,7 +475,7 @@ class BioGlowHandler(SimpleHTTPRequestHandler):
         if self.path == "/api/bioglow/direction":
             result = direction_control_state()
             payload = json.dumps(result, separators=(",", ":")).encode()
-            self.send_response(200 if result["status"] == "ok" else 502)
+            self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Cache-Control", "no-store")
             self.send_header("Content-Length", str(len(payload)))
