@@ -208,21 +208,12 @@ const wildlifeStatus = document.querySelector('[data-wildlife-api-state]');
 const wildlifeDashboard = document.querySelector('.wildlife-dashboard');
 const wildlifeCollapseToggle = document.querySelector('.wildlife-collapse-toggle');
 const animalDemoMode = new URLSearchParams(window.location.search).get('animal-demo') === '1';
-const animalDemoPayload = (() => {
-  const now = Date.now();
-  const minutesAgo = minutes => new Date(now - minutes * 60_000).toISOString();
-  return {status:'ok',range:'24h',recordings_analyzed:18,species_detected:4,animals:[
-    {scientific_name:'Canis latrans',common_name:'Coyote',detection_count:7,last_detected:minutesAgo(18)},
-    {scientific_name:'Procyon lotor',common_name:'Raccoon',detection_count:5,last_detected:minutesAgo(76)},
-    {scientific_name:'Batrachoseps stebbinsi',common_name:'Sierran tree frog',detection_count:3,last_detected:minutesAgo(242)},
-    {scientific_name:'Bubo virginianus',common_name:'Great horned owl',detection_count:3,last_detected:minutesAgo(603)},
-  ]};
-})();
+const animalDemoPayload = {status:'ok',range:'24h',recordings_analyzed:0,species_detected:0,animals:[]};
 const animalDetails = {
-  coyote: { call: 'assets/call-coyote-field.wav' },
-  owl: { call: 'assets/call-owl-field.wav' },
-  frog: { call: 'assets/call-frog-field.wav' },
-  raccoon: { call: 'assets/call-raccoon-field.wav' }
+  coyote: { call: 'assets/call-coyote-field.wav', species:'Canis latrans', name:'Coyote' },
+  owl: { call: 'assets/call-owl-field.wav', species:'Bubo virginianus', name:'Great horned owl' },
+  frog: { call: 'assets/call-frog-field.wav', species:'Batrachoseps stebbinsi', name:'Sierran tree frog' },
+  raccoon: { call: 'assets/call-raccoon-field.wav', species:'Procyon lotor', name:'Raccoon' }
 };
 let animalTapCount = 0;
 let currentCall = null;
@@ -241,6 +232,20 @@ function recordSighting(key, button) {
   currentCall = new Audio(animal.call);
   currentCall.volume = .8;
   currentCall.play().catch(() => {});
+  if (animalDemoMode) {
+    const existing = animalDemoPayload.animals.find(item => item.scientific_name === animal.species);
+    if (existing) {
+      existing.detection_count += 1;
+      existing.last_detected = new Date().toISOString();
+    } else {
+      animalDemoPayload.animals.push({scientific_name:animal.species,common_name:animal.name,detection_count:1,last_detected:new Date().toISOString()});
+      animalDemoPayload.species_detected = animalDemoPayload.animals.length;
+    }
+    animalDemoPayload.recordings_analyzed += 1;
+    renderWildlifeCards(animalDemoPayload);
+    wildlifeStatus.textContent = 'DEMO';
+    wildlifeStatus.setAttribute('data-state', 'connected');
+  }
 
   animalTapCount += 1;
   if (animalTapCount === 2) {
@@ -326,7 +331,7 @@ function renderWildlifeCards(payload) {
   wildlifeCount.textContent = String(payload.recordings_analyzed || 0).padStart(2, '0');
   wildlifeCount.setAttribute('aria-label', `${payload.recordings_analyzed || 0} model detections in the last 24 hours`);
   if (!animals.length) {
-    clearWildlifeCards(payload.status === 'ok' ? 'No completed animal analyses in the last 24 hours.' : 'Station animal history is unavailable.');
+    clearWildlifeCards(animalDemoMode ? 'Tap an animal in the scene to add it to the demo list.' : payload.status === 'ok' ? 'No completed animal analyses in the last 24 hours.' : 'Station animal history is unavailable.');
     return;
   }
 
