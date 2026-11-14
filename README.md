@@ -2,13 +2,15 @@
 
 Interactive static demo of the BioGlow lamp, built from the four STL parts in this repository. The deployable site is in `dist/`.
 
+Wildlife reference photos use the Unsplash search API. Configure an `UNSPLASH_ACCESS_KEY` secret in the deployed Worker; for local `server.py` use the same name as an environment variable. The UI hotlinks Unsplash image URLs and credits each photographer.
+
 ## Preview locally
 
 ```sh
 python3 server.py
 ```
 
-Open <http://127.0.0.1:8765/>. The site has no build step. `server.py` serves `dist/` and provides fixed same-origin routes for BirdCast migration, station wildlife detections, and directional lamp aiming. The direction proxy limits changes to angle and beam width through the station's direction endpoint and restores the prior mode when needed. Wildlife card photos come from iNaturalist observations with CC-BY licensed photos, with attribution displayed on each card. Set `BIOGLOW_API_BASE` in the server environment to change the BioGlow upstream base URL; it is never sent to the browser.
+Open <http://127.0.0.1:8765/>. The site has no build step. `server.py` serves `dist/` and provides fixed same-origin routes for BirdCast migration, station wildlife detections, and directional lamp aiming. The direction proxy limits changes to angle and beam width through the station's direction endpoint and restores the prior mode when needed. Wildlife reference photos come from Unsplash and display photographer attribution. Set `BIOGLOW_API_BASE` in the server environment to change the BioGlow upstream base URL; it is never sent to the browser.
 
 ## Cloudflare live API routes
 

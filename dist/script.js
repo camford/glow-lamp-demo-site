@@ -217,10 +217,10 @@ const animalDemoMode = new URLSearchParams(window.location.search).get('animal-d
 const animalDemoPayload = {status:'ok',range:'24h',recordings_analyzed:0,species_detected:0,animals:[]};
 const clickedWildlife = new Map();
 const animalDetails = {
-  coyote: { call: 'assets/call-coyote-field.wav', species:'Canis latrans', name:'Coyote', image:'assets/wildlife-coyote.png' },
-  owl: { call: 'assets/call-owl-field.wav', species:'Bubo virginianus', name:'Great horned owl', image:'assets/wildlife-great-horned-owl.png' },
-  frog: { call: 'assets/call-frog-field.wav', species:'Batrachoseps stebbinsi', name:'Sierran tree frog', image:'assets/wildlife-sierran-tree-frog.png' },
-  raccoon: { call: 'assets/call-raccoon-field.wav', species:'Procyon lotor', name:'Raccoon', image:'assets/wildlife-raccoon.png' }
+  coyote: { call: 'assets/call-coyote-field.wav', species:'Canis latrans', name:'Coyote', image:'assets/wildlife-coyote.png', imageSource:'BioGlow demo' },
+  owl: { call: 'assets/call-owl-field.wav', species:'Bubo virginianus', name:'Great horned owl', image:'assets/wildlife-great-horned-owl.png', imageSource:'BioGlow demo' },
+  frog: { call: 'assets/call-frog-field.wav', species:'Batrachoseps stebbinsi', name:'Sierran tree frog', image:'assets/wildlife-sierran-tree-frog.png', imageSource:'BioGlow demo' },
+  raccoon: { call: 'assets/call-raccoon-field.wav', species:'Procyon lotor', name:'Raccoon', image:'assets/wildlife-raccoon.png', imageSource:'BioGlow demo' }
 };
 let animalTapCount = 0;
 let currentCall = null;
@@ -255,7 +255,7 @@ function recordSighting(key, button) {
 
 function addClickedWildlife(animal) {
   const now = new Date().toISOString();
-  const item = clickedWildlife.get(animal.species) || {scientific_name:animal.species,common_name:animal.name,image_url:animal.image,detection_count:0,last_detected:''};
+  const item = clickedWildlife.get(animal.species) || {scientific_name:animal.species,common_name:animal.name,image_url:animal.image,image_source:animal.imageSource,detection_count:0,last_detected:''};
   item.detection_count += 1;
   item.last_detected = now;
   clickedWildlife.set(animal.species,item);
@@ -281,7 +281,7 @@ function addTimedDemoSighting() {
   const now = new Date().toISOString();
   const existing = animalDemoPayload.animals.find(item => item.scientific_name === animal.species);
   if (existing) { existing.detection_count += 1; existing.last_detected = now; }
-  else animalDemoPayload.animals.push({scientific_name:animal.species,common_name:animal.name,image_url:animal.image,detection_count:1,last_detected:now});
+  else animalDemoPayload.animals.push({scientific_name:animal.species,common_name:animal.name,image_url:animal.image,image_source:animal.imageSource,detection_count:1,last_detected:now});
   animalDemoPayload.recordings_analyzed += 1;
   animalDemoPayload.species_detected = animalDemoPayload.animals.length;
   renderWildlifeCards(animalDemoPayload);
@@ -331,11 +331,14 @@ async function loadWildlifeImage(image) {
   if (image.dataset.loading === 'true') return;
   image.dataset.loading = 'true';
   try {
-    const response = await fetch(`/api/wildlife/image?species=${encodeURIComponent(image.dataset.species)}`, { cache:'force-cache' });
-    if (!response.ok) throw new Error('No reference photo');
-    const photo = await response.json();
     const card = image.closest('.sighting-row');
     const name = card?.querySelector('.sighting-name');
+    const commonName = name && name.textContent !== 'Loading common name…' ? name.textContent : '';
+    const params = new URLSearchParams({species:image.dataset.species});
+    if (commonName) params.set('common_name',commonName);
+    const response = await fetch(`/api/wildlife/image?${params}`, { cache:'force-cache' });
+    if (!response.ok) throw new Error('No reference photo');
+    const photo = await response.json();
     const credit = card?.querySelector('.sighting-credit');
     if (name && photo.common_name) name.textContent = photo.common_name;
     if (photo.image_url) {
@@ -346,8 +349,8 @@ async function loadWildlifeImage(image) {
       image.remove();
     }
     if (credit) {
-      credit.textContent = photo.image_attribution ? `Photo via iNaturalist · ${photo.image_attribution}` : 'Photo via iNaturalist';
-      if (photo.taxon_url) credit.href = photo.taxon_url;
+      credit.textContent = photo.image_attribution || 'Photos via Unsplash';
+      if (photo.attribution_url) credit.href = photo.attribution_url;
     }
   } catch {
     image.parentElement?.classList.add('sighting-image-empty');
@@ -397,20 +400,15 @@ function renderWildlifeCards(payload) {
     detectedAt.dateTime = animal.last_detected || '';
     detectedAt.textContent = `Latest · ${formatDetectionTime(animal.last_detected)}`;
     info.append(heading, scientificName, detectedAt);
-    if (animal.image_attribution) {
-      const credit = document.createElement('span');
-      credit.className = 'sighting-credit';
-      credit.textContent = animal.image_attribution;
-      info.append(credit);
-    } else {
-      const credit = document.createElement('a');
-      credit.className = 'sighting-credit';
-      credit.href = 'https://www.inaturalist.org/';
+    const credit = document.createElement(animal.image_source === 'BioGlow demo' ? 'span' : 'a');
+    credit.className = 'sighting-credit';
+    credit.textContent = animal.image_attribution || (animal.image_source === 'BioGlow demo' ? 'Bundled demo image' : 'Photos via Unsplash');
+    if (credit.tagName === 'A') {
+      credit.href = animal.attribution_url || 'https://unsplash.com/?utm_source=bioglow_demo&utm_medium=referral';
       credit.target = '_blank';
       credit.rel = 'noopener';
-      credit.textContent = 'Photo via iNaturalist';
-      info.append(credit);
     }
+    info.append(credit);
     card.append(photo, info);
     return card;
   });

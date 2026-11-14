@@ -20,8 +20,8 @@ BIOGLOW_API_BASE = os.environ.get(
     "BIOGLOW_API_BASE", "http://glow.ultraviolet.nirtech.org"
 ).rstrip("/")
 USER_AGENT = "Mozilla/5.0 BioGlow-dashboard/1.0"
-INATURALIST_OBSERVATIONS_URL = "https://api.inaturalist.org/v1/observations"
 INATURALIST_TAXA_URL = "https://api.inaturalist.org/v1/taxa"
+UNSPLASH_SEARCH_URL = "https://api.unsplash.com/search/photos"
 HISTORY_PATH = "/v1/history?source=microphone&range=1d"
 STATION_MODE_PATH = "/v1/station-mode"
 DIRECTION_PATH = "/v1/direction"
@@ -291,102 +291,54 @@ def project_migration(value):
     return result
 
 
-def inaturalist_photo(scientific_name):
-    global _last_taxon_lookup
+def unsplash_photo(scientific_name, preferred_common_name=""):
     if not re.fullmatch(r"[A-Za-z][A-Za-z .'-]{1,90}", scientific_name):
         return {}
+    api_key = os.environ.get("UNSPLASH_ACCESS_KEY", "").strip()
+    if not api_key:
+        return {}
+    common_name = preferred_common_name.strip() if isinstance(preferred_common_name, str) else ""
+    if not common_name or not re.fullmatch(r"[A-Za-z][A-Za-z .'-]{0,90}", common_name):
+        common_name = inaturalist_common_name(scientific_name)
+    cache_key = f"{scientific_name}|{common_name.lower()}"
     now = time.monotonic()
     with _taxon_image_lock:
-        cached = _taxon_image_cache.get(scientific_name)
+        cached = _taxon_image_cache.get(cache_key)
         if cached and cached[0] > now:
             return cached[1]
-        wait = 1.0 - (now - _last_taxon_lookup)
-        if wait > 0:
-            time.sleep(wait)
-        query = urlencode({
-            "taxon_name": scientific_name,
-            "photo_license": "CC-BY",
-            "per_page": 10,
-            "order_by": "votes",
-            "order": "desc",
-            "quality_grade": "research",
-        })
+        query = urlencode({"query": f"{common_name} wildlife", "per_page": 10, "content_filter": "high", "orientation": "squarish"})
         request = urllib.request.Request(
-            f"{INATURALIST_OBSERVATIONS_URL}?{query}",
-            headers={"Accept": "application/json", "User-Agent": USER_AGENT},
+            f"{UNSPLASH_SEARCH_URL}?{query}",
+            headers={"Accept": "application/json", "Authorization": f"Client-ID {api_key}"},
             method="GET",
         )
-        _last_taxon_lookup = time.monotonic()
         try:
             with urllib.request.urlopen(request, timeout=8) as response:
-                observations = json.load(response).get("results", [])
+                photos = json.load(response).get("results", [])
         except (urllib.error.URLError, TimeoutError, OSError, ValueError):
-            observations = []
-        common_name = scientific_name
-        taxon_url = "https://www.inaturalist.org/"
-        for observation in observations:
-            taxon = observation.get("taxon") or {}
-            matched_name = taxon.get("name") or ""
-            if matched_name != scientific_name and not matched_name.startswith(scientific_name + " "):
+            photos = []
+        for photo in photos:
+            urls = photo.get("urls") or {}
+            user = photo.get("user") or {}
+            links = photo.get("links") or {}
+            image_url = urls.get("small") or urls.get("regular")
+            profile_url = (user.get("links") or {}).get("html", "")
+            photo_url = links.get("html", "")
+            if not image_url or not image_url.startswith("https://images.unsplash.com/"):
                 continue
-            common_name = taxon.get("preferred_common_name") or common_name
-            if taxon.get("id"):
-                taxon_url = f"https://www.inaturalist.org/taxa/{taxon['id']}"
-            photo = next((
-                candidate for candidate in observation.get("photos", [])
-                if candidate.get("license_code", "").lower() == "cc-by"
-            ), {})
-            image_url = photo.get("url")
-            if image_url and image_url.startswith((
-                "https://static.inaturalist.org/",
-                "https://inaturalist-open-data.s3.amazonaws.com/",
-            )):
-                result = {
-                    "common_name": common_name,
-                    "image_url": image_url,
-                    "image_attribution": photo.get("attribution") or "Photo via iNaturalist",
-                    "taxon_url": f"https://www.inaturalist.org/observations/{observation['id']}",
-                }
-                _taxon_image_cache[scientific_name] = (time.monotonic() + 86400, result)
-                return result
-
-        wait = 1.0 - (time.monotonic() - _last_taxon_lookup)
-        if wait > 0:
-            time.sleep(wait)
-        taxon_query = urlencode({"q": scientific_name, "per_page": 10})
-        taxon_request = urllib.request.Request(
-            f"{INATURALIST_TAXA_URL}?{taxon_query}",
-            headers={"Accept": "application/json", "User-Agent": USER_AGENT},
-            method="GET",
-        )
-        _last_taxon_lookup = time.monotonic()
-        try:
-            with urllib.request.urlopen(taxon_request, timeout=8) as response:
-                taxa = json.load(response).get("results", [])
-        except (urllib.error.URLError, TimeoutError, OSError, ValueError):
-            taxa = []
-        for taxon in taxa:
-            if taxon.get("name") != scientific_name:
+            if not profile_url.startswith("https://unsplash.com/") or not photo_url.startswith("https://unsplash.com/"):
                 continue
-            common_name = taxon.get("preferred_common_name") or common_name
-            taxon_url = f"https://www.inaturalist.org/taxa/{taxon['id']}" if taxon.get("id") else taxon_url
-            photo = taxon.get("default_photo") or {}
-            image_url = photo.get("medium_url") or photo.get("url")
-            if photo.get("license_code", "").lower() == "cc-by" and image_url and image_url.startswith((
-                "https://static.inaturalist.org/",
-                "https://inaturalist-open-data.s3.amazonaws.com/",
-            )):
-                result = {
-                    "common_name": common_name,
-                    "image_url": image_url,
-                    "image_attribution": photo.get("attribution") or "Photo via iNaturalist",
-                    "taxon_url": taxon_url,
-                }
-                _taxon_image_cache[scientific_name] = (time.monotonic() + 86400, result)
-                return result
-            break
-        result = {"common_name": common_name, "taxon_url": taxon_url}
-        _taxon_image_cache[scientific_name] = (time.monotonic() + (86400 if common_name != scientific_name else 3600), result)
+            result = {
+                "common_name": common_name or scientific_name,
+                "image_url": image_url,
+                "image_attribution": f"Photo by {user.get('name') or 'Unsplash photographer'} on Unsplash",
+                "attribution_url": f"{profile_url}{'&' if '?' in profile_url else '?'}utm_source=bioglow_demo&utm_medium=referral",
+                "taxon_url": photo_url,
+            }
+            _taxon_image_cache[cache_key] = (time.monotonic() + 86400, result)
+            return result
+        result = {"common_name": common_name or scientific_name}
+        _taxon_image_cache[cache_key] = (time.monotonic() + 3600, result)
         return result
 
 
@@ -482,11 +434,11 @@ def wildlife_detections():
     }
 
 
-def wildlife_image(scientific_name):
+def wildlife_image(scientific_name, common_name=""):
     with _recent_wildlife_lock:
         if scientific_name not in _recent_wildlife_species:
             return None
-    return inaturalist_photo(scientific_name)
+    return unsplash_photo(scientific_name, common_name)
 
 
 def wildlife_common_name(scientific_name):
@@ -560,10 +512,10 @@ class BioGlowHandler(SimpleHTTPRequestHandler):
         if self.path.startswith("/api/wildlife/image"):
             request = urlsplit(self.path)
             parameters = parse_qs(request.query, keep_blank_values=True)
-            if request.path != "/api/wildlife/image" or set(parameters) != {"species"} or len(parameters["species"]) != 1:
-                self.send_error(400, "Provide one recently detected species")
+            if request.path != "/api/wildlife/image" or "species" not in parameters or set(parameters) - {"species", "common_name"} or len(parameters["species"]) != 1 or len(parameters.get("common_name", [])) > 1:
+                self.send_error(400, "Provide one recently detected species and an optional common_name")
                 return
-            image = wildlife_image(parameters["species"][0])
+            image = wildlife_image(parameters["species"][0], parameters.get("common_name", [""])[0])
             if image is None:
                 self.send_error(404, "Species is not in recent station detections")
                 return

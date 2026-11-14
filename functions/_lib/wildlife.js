@@ -1,10 +1,12 @@
 import {fetchStationJson, jsonResponse} from './bioglow.js';
 
-const INATURALIST_OBSERVATIONS = 'https://api.inaturalist.org/v1/observations';
 const INATURALIST_TAXA = 'https://api.inaturalist.org/v1/taxa';
+const UNSPLASH_SEARCH = 'https://api.unsplash.com/search/photos';
 const VALID_SPECIES = /^[A-Za-z][A-Za-z .'-]{1,90}$/;
-const ALLOWED_IMAGE_HOSTS = new Set(['static.inaturalist.org','inaturalist-open-data.s3.amazonaws.com']);
+const VALID_COMMON_NAME = /^[A-Za-z][A-Za-z .'-]{0,90}$/;
+const ALLOWED_IMAGE_HOSTS = new Set(['images.unsplash.com']);
 const WILDLIFE_WINDOW_MS = 24 * 60 * 60 * 1000;
+const wildlifeImageCache = new Map();
 
 export async function getWildlifeDetections(env) {
   const response = await fetchStationJson(env,'history');
@@ -84,6 +86,16 @@ function safeImageUrl(value) {
   }
 }
 
+function plainHttpUrl(value, hostname) {
+  if (typeof value !== 'string') return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && url.hostname === hostname ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function getWildlifeName(scientificName) {
   const name = validScientificName(scientificName);
   if (!name) return jsonResponse({error:'Provide one valid scientific species name.'},400);
@@ -91,41 +103,49 @@ export async function getWildlifeName(scientificName) {
   return jsonResponse({common_name:taxon.common_name},200);
 }
 
-export async function getWildlifeImage(scientificName) {
+export async function getWildlifeImage(scientificName, env, preferredCommonName = '') {
   const name = validScientificName(scientificName);
   if (!name) return jsonResponse({error:'Provide one valid scientific species name.'},400);
-  const params = new URLSearchParams({
-    taxon_name:name,
-    photo_license:'CC-BY',
-    per_page:'10',
-    order_by:'votes',
-    order:'desc',
-    quality_grade:'research',
-  });
-  const observations = await fetchINaturalist(`${INATURALIST_OBSERVATIONS}?${params}`);
-  const results = Array.isArray(observations?.results)?observations.results:[];
-  for (const observation of results) {
-    const taxon = observation?.taxon || {};
-    if (taxon.name !== name && !String(taxon.name || '').startsWith(`${name} `)) continue;
-    const photo = Array.isArray(observation.photos) ? observation.photos.find(item => String(item?.license_code || '').toLowerCase()==='cc-by' && safeImageUrl(item?.url)) : null;
-    const imageUrl = safeImageUrl(photo?.url);
-    if (!imageUrl) continue;
-    return jsonResponse({
-      common_name:taxon.preferred_common_name || name,
-      image_url:imageUrl,
-      image_attribution:photo.attribution || 'Photo via iNaturalist',
-      taxon_url:Number.isInteger(observation.id)?`https://www.inaturalist.org/observations/${observation.id}`:'https://www.inaturalist.org/',
-    },200);
-  }
+  const commonName = typeof preferredCommonName === 'string' && VALID_COMMON_NAME.test(preferredCommonName.trim())
+    ? preferredCommonName.trim()
+    : '';
+  const cacheKey = `${name}|${commonName.toLowerCase()}`;
+  const cached = wildlifeImageCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) return jsonResponse(cached.value,200);
+  const accessKey = typeof env?.UNSPLASH_ACCESS_KEY === 'string' ? env.UNSPLASH_ACCESS_KEY.trim() : '';
+  if (!accessKey) return jsonResponse({error:'Unsplash image search is not configured.'},503);
 
-  const taxon = await lookupTaxon(name);
-  const photo = taxon.photo || {};
-  const imageUrl = photo.license_code?.toLowerCase()==='cc-by' ? safeImageUrl(photo.medium_url || photo.url) : null;
-  if (!imageUrl) return jsonResponse({error:'No CC-BY reference image is available.'},404);
-  return jsonResponse({
-    common_name:taxon.common_name,
-    image_url:imageUrl,
-    image_attribution:photo.attribution || 'Photo via iNaturalist',
-    taxon_url:taxon.taxon_url,
-  },200);
+  const taxon = commonName ? {common_name:commonName} : await lookupTaxon(name);
+  const searchName = taxon.common_name && taxon.common_name !== name ? taxon.common_name : name;
+  const params = new URLSearchParams({query:`${searchName} wildlife`,per_page:'10',content_filter:'high',orientation:'squarish'});
+  try {
+    const response = await fetch(`${UNSPLASH_SEARCH}?${params}`,{
+      headers:{Accept:'application/json',Authorization:`Client-ID ${accessKey}`},
+      signal:AbortSignal.timeout(10000),
+    });
+    if (!response.ok) return jsonResponse({error:`Unsplash image search returned ${response.status}.`},502);
+    const data = await response.json();
+    const photos = Array.isArray(data?.results) ? data.results : [];
+    for (const photo of photos) {
+      const imageUrl = safeImageUrl(photo?.urls?.small || photo?.urls?.regular);
+      const photoUrl = plainHttpUrl(photo?.links?.html,'unsplash.com');
+      const photographerUrl = plainHttpUrl(photo?.user?.links?.html,'unsplash.com');
+      if (!imageUrl || !photoUrl || !photographerUrl) continue;
+      const attributionUrl = new URL(photographerUrl);
+      attributionUrl.searchParams.set('utm_source','bioglow_demo');
+      attributionUrl.searchParams.set('utm_medium','referral');
+      const value = {
+        common_name:taxon.common_name || name,
+        image_url:imageUrl,
+        image_attribution:`Photo by ${String(photo.user.name || 'Unsplash photographer').slice(0,100)} on Unsplash`,
+        attribution_url:attributionUrl.href,
+        taxon_url:photoUrl,
+      };
+      wildlifeImageCache.set(cacheKey,{value,expiresAt:Date.now()+24*60*60*1000});
+      return jsonResponse(value,200);
+    }
+    return jsonResponse({error:'Unsplash has no matching animal photos.'},404);
+  } catch {
+    return jsonResponse({error:'Unable to reach Unsplash image search.'},502);
+  }
 }
