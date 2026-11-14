@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#11121a">
+  <title>Choose your experience | Glow</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      color: #f7f7fb;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(ellipse at 20% 15%, #40306a 0, transparent 42%),
+        radial-gradient(ellipse at 85% 85%, #16475a 0, transparent 38%),
+        #11121a;
+    }
+
+    main {
+      width: min(100%, 480px);
+      padding: 40px;
+      text-align: center;
+      background: rgb(255 255 255 / 6%);
+      border: 1px solid rgb(255 255 255 / 12%);
+      border-radius: 24px;
+      box-shadow: 0 24px 80px rgb(0 0 0 / 35%);
+      backdrop-filter: blur(14px);
+    }
+
+    .mark {
+      width: 52px;
+      height: 52px;
+      margin: 0 auto 24px;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      color: #17131f;
+      font-size: 26px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #d8a8ff, #8ce8df);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.8rem, 6vw, 2.4rem);
+      letter-spacing: -0.04em;
+    }
+
+    p {
+      margin: 12px 0 30px;
+      color: #b9b9c9;
+      line-height: 1.6;
+    }
+
+    .choices { display: grid; gap: 12px; }
+
+    a {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 17px 20px;
+      color: inherit;
+      text-align: left;
+      text-decoration: none;
+      font-weight: 650;
+      background: rgb(255 255 255 / 7%);
+      border: 1px solid rgb(255 255 255 / 13%);
+      border-radius: 14px;
+      transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+    }
+
+    a:hover, a:focus-visible {
+      transform: translateY(-2px);
+      background: rgb(255 255 255 / 12%);
+      border-color: rgb(216 168 255 / 60%);
+      outline: none;
+    }
+
+    a span:last-child { color: #aaaabd; font-size: 1.2rem; }
+
+    @media (max-width: 480px) {
+      main { padding: 32px 24px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      a { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="mark" aria-hidden="true">G</div>
+    <h1>Welcome to Glow</h1>
+    <p>Choose how you’d like to continue.</p>
+
+    <nav class="choices" aria-label="Choose an experience">
+      <a href="https://app.user.glow.ultraviolet.nirtech.org">
+        <span>User</span><span aria-hidden="true">→</span>
+      </a>
+      <a href="https://demo.user.glow.ultraviolet.nirtech.org">
+        <span>Demo</span><span aria-hidden="true">→</span>
+      </a>
+    </nav>
+  </main>
+</body>
+</html>

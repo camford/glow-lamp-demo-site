@@ -127,14 +127,15 @@ function queueDirectionAngle(angle, distance, settled) {
   directionSendTimer = setTimeout(flushDirectionAngle, delay);
 }
 
-async function stopDirectionControl() {
+async function stopDirectionControl(restoreModeOverride = null) {
   clearTimeout(directionSendTimer);
   directionPending = null;
   if (directionSending) await directionInFlight.catch(() => {});
-  if (!directionAimOwned) return;
+  if (!directionAimOwned && !restoreModeOverride) return;
   directionAimOwned = false;
-  const restoreMode = directionRestoreMode;
+  const restoreMode = restoreModeOverride || directionRestoreMode;
   directionRestoreMode = null;
+  if (!restoreMode) return;
   try {
     await postDirectionControl({action:'stop',restore_mode:restoreMode});
   } catch (error) {
@@ -154,10 +155,15 @@ function selectDemo(index, moveFocus = false) {
   if (!wildlife && currentCall) { currentCall.pause(); currentCall.currentTime = 0; }
   experience.dataset.demo = String(index);
   experience.dataset.light = conditions ? conditionsLight : 'night';
-  if (index === 0) startGlowLight();
-  else stopGlowLight();
+  if (index === 0) {
+    startGlowLight();
+    const modeChange = previousDemo === 2
+      ? stopDirectionControl('normal')
+      : postDirectionControl({action:'stop',restore_mode:'normal'});
+    modeChange.then(refreshGlowLight).catch(() => {});
+  } else stopGlowLight();
   if (index === 2) readDirectionState();
-  else if (previousDemo === 2) stopDirectionControl();
+  else if (previousDemo === 2 && index !== 0) stopDirectionControl();
   lightSwitch.setAttribute('aria-hidden', String(!conditions));
   lightSwitch.disabled = !conditions;
   wildlifeLayer.inert = !wildlife;
