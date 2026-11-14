@@ -12,7 +12,7 @@ Open <http://127.0.0.1:8765/>. The site has no build step. `server.py` serves `d
 
 ## Cloudflare live API routes
 
-`src/index.js` is the Cloudflare Worker entrypoint for the live light and migration API routes. `wrangler.jsonc` configures the static files in `dist/`, ensures `/api/*` reaches the Worker, and keeps the upstream base URL in server-side Worker configuration. To deploy this Worker and its assets from the repository root, run `npx wrangler deploy`. The Cloudflare account must be authenticated with Wrangler.
+`src/index.js` is the Cloudflare Worker entrypoint for the live light, migration, direction, and wildlife API routes. `wrangler.jsonc` configures the static files in `dist/`, ensures `/api/*` reaches the Worker, and keeps the upstream base URL in server-side Worker configuration. To deploy this Worker and its assets from the repository root, run `npx wrangler deploy`. The Cloudflare account must be authenticated with Wrangler.
 
 The same handlers are also available as Pages Functions under `functions/` if the project is configured as Cloudflare Pages. Pages dashboard drag-and-drop deployments do not compile a `functions/` directory; deploy Pages Functions using Git integration or Wrangler.
 

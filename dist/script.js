@@ -15,6 +15,7 @@ const glowLightPower = document.querySelector('[data-light-power]');
 const glowLightColor = document.querySelector('[data-light-color]');
 const glowLightSwatch = document.querySelector('[data-light-swatch]');
 let directionAimOwned = false;
+let directionRestoreMode = null;
 let directionMaxBeamWidth = 49;
 let directionPending = null;
 let directionSendTimer = 0;
@@ -97,7 +98,10 @@ async function flushDirectionAngle() {
   directionLastSentAt = Date.now();
   directionInFlight = (async () => {
     const result = await postDirectionControl({angle,beam_width});
-    if (result.started) directionAimOwned = true;
+    if (result.started) {
+      directionAimOwned = true;
+      directionRestoreMode = result.original_mode || 'normal';
+    }
     if (Number.isInteger(result.max_beam_width)) directionMaxBeamWidth = result.max_beam_width;
     showDirectionStatus(`Station beam · ${result.angle_degrees ?? angle}° · ${result.beam_width ?? beam_width} pixels wide.`, 'connected');
   })();
@@ -129,8 +133,10 @@ async function stopDirectionControl() {
   if (directionSending) await directionInFlight.catch(() => {});
   if (!directionAimOwned) return;
   directionAimOwned = false;
+  const restoreMode = directionRestoreMode;
+  directionRestoreMode = null;
   try {
-    await postDirectionControl({action:'stop'});
+    await postDirectionControl({action:'stop',restore_mode:restoreMode});
   } catch (error) {
     showDirectionStatus(error.message || 'Could not return the station to its previous mode.', 'offline');
   }

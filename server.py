@@ -165,11 +165,11 @@ def control_user_aim(angle=None, stop=False):
         }
 
 
-def control_direction_beam(angle=None, beam_width=None, stop=False):
+def control_direction_beam(angle=None, beam_width=None, stop=False, restore_mode=None):
     global _direction_control_original_mode, _direction_control_config
     with _direction_control_lock:
         if stop:
-            original_mode = _direction_control_original_mode
+            original_mode = _direction_control_original_mode or restore_mode
             if original_mode is None:
                 return 200, {"status": "ok", "stopped": False}
             current = fetch_json(STATION_MODE_PATH)
@@ -233,6 +233,7 @@ def control_direction_beam(angle=None, beam_width=None, stop=False):
             "beam_width": data.get("beam_width", beam_width),
         "max_beam_width": data.get("max_beam_width", max_beam_width),
             "started": _direction_control_original_mode != "direction_config",
+            "original_mode": _direction_control_original_mode if _direction_control_original_mode != "direction_config" else None,
         }
 
 
@@ -590,8 +591,8 @@ class BioGlowHandler(SimpleHTTPRequestHandler):
                 for key in ("angle", "beam_width")
             ) and 0 <= body["angle"] <= 359:
                 status, result = control_direction_beam(angle=body["angle"], beam_width=body["beam_width"])
-            elif body == {"action": "stop"}:
-                status, result = control_direction_beam(stop=True)
+            elif body.get("action") == "stop" and set(body).issubset({"action", "restore_mode"}) and body.get("restore_mode") in (None, "normal", "direction_config"):
+                status, result = control_direction_beam(stop=True, restore_mode=body.get("restore_mode"))
             else:
                 self.send_error(400, "Provide an angle from 0 to 359 and an odd beam width")
                 return

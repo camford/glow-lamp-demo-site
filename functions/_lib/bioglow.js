@@ -1,19 +1,37 @@
 const DEFAULT_BIOGLOW_API_BASE = 'http://glow.ultraviolet.nirtech.org';
+const STATION_ENDPOINTS = Object.freeze({
+  latest:'/v1/latest',
+  mode:'/v1/station-mode',
+  direction:'/v1/direction',
+  history:'/v1/history?source=microphone&range=1h',
+});
 
-export async function fetchLatest(env) {
+function stationApiBase(env) {
   const configuredBase = typeof env?.BIOGLOW_API_BASE === 'string' ? env.BIOGLOW_API_BASE : DEFAULT_BIOGLOW_API_BASE;
-  let apiBase = DEFAULT_BIOGLOW_API_BASE;
   try {
     const configuredUrl = new URL(configuredBase);
     if (configuredUrl.protocol === 'http:' && configuredUrl.hostname === 'glow.ultraviolet.nirtech.org') {
-      apiBase = configuredUrl.origin;
+      return configuredUrl.origin;
     }
   } catch {
-    apiBase = DEFAULT_BIOGLOW_API_BASE;
+    return DEFAULT_BIOGLOW_API_BASE;
+  }
+  return DEFAULT_BIOGLOW_API_BASE;
+}
+
+export async function fetchStationJson(env, endpoint, {method = 'GET', body} = {}) {
+  const path = STATION_ENDPOINTS[endpoint];
+  if (!path || (method !== 'GET' && !(method === 'POST' && ['mode','direction'].includes(endpoint)))) {
+    return {http_status:400,data:{error:'Unsupported station route or method'}};
   }
   try {
-    const response = await fetch(`${apiBase}/v1/latest`, {
-      headers: {Accept:'application/json'},
+    const headers = new Headers({Accept:'application/json'});
+    if (body !== undefined) headers.set('Content-Type','application/json');
+    const response = await fetch(`${stationApiBase(env)}${path}`, {
+      method,
+      headers,
+      body:body === undefined ? undefined : JSON.stringify(body),
+      redirect:'manual',
       signal: AbortSignal.timeout(10000),
     });
     let data = null;
@@ -26,6 +44,10 @@ export async function fetchLatest(env) {
   } catch {
     return {http_status:null,data:null};
   }
+}
+
+export function fetchLatest(env) {
+  return fetchStationJson(env,'latest');
 }
 
 export function jsonResponse(value, status = 200) {
