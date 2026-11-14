@@ -1,7 +1,7 @@
 import {fetchLatest, jsonResponse} from '../../_lib/bioglow.js';
 
-export async function onRequestGet() {
-  const latest = await fetchLatest();
+export async function onRequestGet({env}) {
+  const latest = await fetchLatest(env);
   const lighting = latest.data?.lighting;
   if (latest.http_status !== 200 || !lighting || typeof lighting !== 'object') {
     return jsonResponse({status:'error',on:null,color:null},502);

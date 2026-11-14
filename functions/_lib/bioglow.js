@@ -1,8 +1,18 @@
-const BIOGLOW_API_BASE = 'http://glow.ultraviolet.nirtech.org';
+const DEFAULT_BIOGLOW_API_BASE = 'http://glow.ultraviolet.nirtech.org';
 
-export async function fetchLatest() {
+export async function fetchLatest(env) {
+  const configuredBase = typeof env?.BIOGLOW_API_BASE === 'string' ? env.BIOGLOW_API_BASE : DEFAULT_BIOGLOW_API_BASE;
+  let apiBase = DEFAULT_BIOGLOW_API_BASE;
   try {
-    const response = await fetch(`${BIOGLOW_API_BASE}/v1/latest`, {
+    const configuredUrl = new URL(configuredBase);
+    if (configuredUrl.protocol === 'http:' && configuredUrl.hostname === 'glow.ultraviolet.nirtech.org') {
+      apiBase = configuredUrl.origin;
+    }
+  } catch {
+    apiBase = DEFAULT_BIOGLOW_API_BASE;
+  }
+  try {
+    const response = await fetch(`${apiBase}/v1/latest`, {
       headers: {Accept:'application/json'},
       signal: AbortSignal.timeout(10000),
     });

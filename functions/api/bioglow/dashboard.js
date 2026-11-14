@@ -1,6 +1,6 @@
 import {dashboardPayload, fetchLatest, jsonResponse} from '../../_lib/bioglow.js';
 
-export async function onRequestGet() {
-  const latest = await fetchLatest();
+export async function onRequestGet({env}) {
+  const latest = await fetchLatest(env);
   return jsonResponse(dashboardPayload(latest));
 }

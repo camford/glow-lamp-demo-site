@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "glow-lamp-demo-site",
+  "main": "./src/index.js",
+  "compatibility_date": "2026-11-13",
+  "vars": {
+    "BIOGLOW_API_BASE": "http://glow.ultraviolet.nirtech.org"
+  },
+  "assets": {
+    "directory": "./dist/",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  }
+}
