@@ -22,7 +22,7 @@ BIOGLOW_API_BASE = os.environ.get(
 USER_AGENT = "Mozilla/5.0 BioGlow-dashboard/1.0"
 INATURALIST_OBSERVATIONS_URL = "https://api.inaturalist.org/v1/observations"
 INATURALIST_TAXA_URL = "https://api.inaturalist.org/v1/taxa"
-HISTORY_PATH = "/v1/history?source=microphone&range=24h"
+HISTORY_PATH = "/v1/history?source=microphone&range=1d"
 STATION_MODE_PATH = "/v1/station-mode"
 DIRECTION_PATH = "/v1/direction"
 USER_AIM_PATH = "/v1/user-aim"
