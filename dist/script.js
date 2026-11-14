@@ -517,8 +517,8 @@ async function refreshMigrationDashboard() {
     const response = await fetch('/api/bioglow/dashboard', { cache:'no-store' });
     if (!response.ok) throw new Error(`Dashboard API returned ${response.status}`);
     renderMigrationDashboard(await response.json());
-  } catch (error) {
-    setMigrationText('migration-updated', error.message || 'Unable to load BirdCast migration data.');
+  } catch {
+    setMigrationText('migration-updated', 'Time unavailable');
   }
 }
 

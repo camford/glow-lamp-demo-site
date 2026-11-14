@@ -103,31 +103,21 @@
 @media(max-width:480px){.wildlife-instruction{left:7px;top:90px;width:calc(100% - 215px);font-size:10px;padding:8px 9px}.glow-phone{width:45vw;min-width:170px;max-width:195px;right:7px;top:90px;height:430px;min-height:0}.phone-frame{padding:5px;border-radius:27px}.phone-screen{border-radius:22px}.phone-island{height:16px}.phone-status{height:30px;padding:8px 15px 0}.app-header{height:34px;padding-inline:12px}.app-brand{font-size:10px}.app-content{height:calc(100% - 86px);padding:14px 12px 0}.app-content h2{font-size:29px}.app-overline,.app-list-heading{font-size:7px}.sighting-image{width:32px;height:32px}.sighting-row{min-height:48px;gap:6px}.sighting-name{font-size:9px}.sighting-time{font-size:8px}}
 @media(prefers-reduced-motion:reduce){.glow-phone,.wildlife-animal{transition:none}.sighting-row,.wildlife-animal.is-calling img{animation:none}}
 
-/* BirdCast migration is presented as a standalone data card. */
-.migration-card{position:absolute;z-index:4;top:clamp(105px,17vh,160px);left:clamp(20px,5vw,76px);width:min(430px,calc(100% - 40px));padding:22px 24px 20px;border:1px solid rgba(229,235,215,.8);border-radius:20px;background:rgba(235,238,222,.97);color:#1c3025;box-shadow:0 24px 70px rgba(0,0,0,.36);backdrop-filter:blur(12px);opacity:0;transform:translateX(-24px) scale(.98);pointer-events:none;transition:opacity .45s ease,transform .55s cubic-bezier(.2,.8,.2,1)}
+/* Bird migration stays focused on its three requested readings. */
+.migration-card{position:absolute;z-index:4;top:clamp(105px,17vh,160px);left:clamp(20px,5vw,76px);width:min(360px,calc(100% - 40px));padding:16px;border:1px solid rgba(230,239,215,.78);border-radius:18px;background:linear-gradient(145deg,rgba(247,248,237,.98),rgba(225,233,212,.97));color:#1c3025;box-shadow:0 22px 58px rgba(0,0,0,.34),inset 0 1px rgba(255,255,255,.85);backdrop-filter:blur(14px);opacity:0;transform:translateX(-20px) scale(.985);pointer-events:none;transition:opacity .4s ease,transform .5s cubic-bezier(.2,.8,.2,1)}
 .experience[data-demo="4"] .migration-card{opacity:1;transform:translateX(0) scale(1);pointer-events:auto}
-.migration-card-header{display:flex;align-items:center;justify-content:space-between;padding-bottom:13px;border-bottom:1px solid rgba(52,79,55,.2)}
-.migration-card-header .app-brand{font-size:12px}
-.migration-card-header .app-live{font-size:8px}
-.migration-card-overline{margin:19px 0 8px;color:#73846a;font-size:9px;font-weight:800;letter-spacing:.16em}
-.migration-card-content h2{margin:0;font:400 39px/.98 Georgia,serif;letter-spacing:-.055em}
-.migration-card-content h2 span{color:#8fb853}
-.migration-card-meta{margin:9px 0 16px;color:#66796b;font-size:10px;line-height:1.4}
-.migration-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.migration-stat{min-width:0;min-height:68px;padding:11px 13px;display:flex;flex-direction:column;justify-content:space-between;gap:8px;border:1px solid rgba(52,79,55,.16);border-radius:10px;background:rgba(255,255,255,.54)}
-.migration-stat>span{color:#73846a;font-size:8px;font-weight:800;letter-spacing:.12em}
-.migration-stat strong{color:#244432;font:600 19px/1.05 'DM Sans',Arial,sans-serif;overflow-wrap:anywhere}
-.migration-stat-primary{grid-column:1/-1;min-height:106px;flex-direction:row;align-items:flex-end;background:#1c3c2d;border-color:#1c3c2d}
-.migration-stat-primary>span{padding-bottom:5px;color:#d0dfc4}
-.migration-stat-primary strong{color:#f1f4e9;font-size:42px;letter-spacing:-.05em}
-.migration-card-note{margin:14px 0 0;padding:10px 12px;border-left:2px solid #9bb77a;background:rgba(218,229,207,.58);color:#536859;font-size:10px;line-height:1.45}
-.migration-source{display:inline-block;margin-top:14px;color:#42634d;font-size:10px;font-weight:700;text-decoration:underline;text-decoration-color:rgba(66,99,77,.35);text-underline-offset:3px}
-.migration-source:hover{color:#1d3d2b}
-.migration-card-updated{margin:9px 0 0;color:#788779;font-size:8px}
-.migration-api-state[data-state="offline"]{color:#a25345}
-.migration-api-state[data-state="offline"] i{background:#bf6958;box-shadow:0 0 7px #bf6958}
-@media(max-width:700px){.migration-card{top:103px;left:12px;width:min(430px,calc(100% - 24px));padding:17px}.migration-card-content h2{font-size:32px}.migration-stat{min-height:62px;padding:9px 10px}.migration-stat-primary{min-height:92px}.migration-stat-primary strong{font-size:35px}}
-@media(max-width:480px){.migration-card{top:90px;left:7px;width:calc(100% - 14px);padding:14px;border-radius:16px}.migration-card-overline{margin-top:14px;font-size:8px}.migration-card-content h2{font-size:28px}.migration-card-meta{font-size:9px;margin-bottom:11px}.migration-stats{gap:6px}.migration-stat{min-height:56px;padding:8px}.migration-stat>span{font-size:7px}.migration-stat strong{font-size:16px}.migration-stat-primary{min-height:80px}.migration-stat-primary strong{font-size:31px}.migration-card-note{margin-top:10px;font-size:9px}}
+.migration-card-content{min-width:0}
+.migration-stats{display:grid;grid-template-columns:1fr;gap:8px}
+.migration-stat{position:relative;min-width:0;min-height:58px;padding:11px 14px;display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:12px;border:1px solid rgba(41,71,48,.11);border-radius:12px;background:rgba(255,255,255,.64);box-shadow:0 2px 7px rgba(34,57,38,.04)}
+.migration-stat>span{color:#607560;font-size:9px;font-weight:750;letter-spacing:.09em;line-height:1.3}
+.migration-stat strong{min-width:0;color:#244432;font:650 20px/1.1 'DM Sans',Arial,sans-serif;text-align:right;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.migration-stat:first-child{min-height:66px;align-items:flex-start;flex-direction:column;justify-content:center;gap:6px;background:rgba(255,255,255,.76)}
+.migration-stat:first-child strong{font-size:15px;letter-spacing:.005em;text-align:left}
+.migration-stat-primary{min-height:90px;padding:15px 17px;background:linear-gradient(120deg,#173b2c,#24543a);border-color:#24543a;box-shadow:0 8px 18px rgba(26,62,42,.18)}
+.migration-stat-primary>span{color:#c6d8b8}
+.migration-stat-primary strong{color:#f6f7ec;font-size:38px;letter-spacing:-.045em}
+@media(max-width:700px){.migration-card{top:103px;left:12px;width:min(360px,calc(100% - 24px));padding:14px}.migration-stat{min-height:54px;padding:10px 12px}.migration-stat:first-child{min-height:60px}.migration-stat-primary{min-height:78px}.migration-stat-primary strong{font-size:34px}}
+@media(max-width:480px){.migration-card{top:90px;left:7px;width:calc(100% - 14px);padding:12px;border-radius:16px}.migration-stats{gap:6px}.migration-stat{min-height:49px;padding:9px 10px;border-radius:10px}.migration-stat>span{font-size:8px}.migration-stat strong{font-size:17px}.migration-stat:first-child{min-height:55px}.migration-stat:first-child strong{font-size:14px}.migration-stat-primary{min-height:70px;padding:12px}.migration-stat-primary strong{font-size:30px}}
 @media(prefers-reduced-motion:reduce){.migration-card{transition:none}}
 
 /* A consistent light sans serif keeps the demo navigation understated. */
@@ -180,7 +170,7 @@
   .wildlife-instruction{top:60px;left:8px;width:clamp(170px,27vw,220px);padding:8px 10px;font-size:clamp(10px,1.5vw,11px);line-height:1.4}
   .glow-phone{top:58px;height:calc(100svh - 66px);min-height:0;width:clamp(175px,26vw,220px)}
   .glow-phone{right:8px}
-  .migration-card{top:58px;left:8px;width:clamp(290px,36vw,400px);max-height:calc(100svh - 68px);overflow-y:auto;padding:12px 15px}
+  .migration-card{top:58px;left:8px;width:min(360px,calc(100% - 24px));max-height:calc(100svh - 68px);overflow-y:auto;padding:10px 12px}
   .phone-frame{padding:5px;border-radius:27px}
   .phone-screen{border-radius:22px}
   .phone-island{top:5px;height:12px}
@@ -196,15 +186,10 @@
   .app-empty-icon{width:22px;height:22px;font-size:14px}
   .sighting-row{min-height:43px;gap:6px}
   .sighting-image{width:30px;height:30px}
-  .migration-card-overline{margin-top:10px}
-  .migration-card-content h2{font-size:24px}
-  .migration-card-meta{margin:5px 0 8px}
-  .migration-stat{min-height:48px;padding:7px}
-  .migration-stat-primary{min-height:64px}
-  .migration-stat-primary strong{font-size:28px}
-  .migration-card-note{margin-top:7px;padding:7px;font-size:8px}
-  .migration-source{margin-top:8px;font-size:8px}
-  .migration-card-updated{margin-top:5px}
+  .migration-stat{min-height:44px;padding:7px 10px}
+  .migration-stat:first-child{min-height:48px}
+  .migration-stat-primary{min-height:62px}
+  .migration-stat-primary strong{font-size:27px}
   .project-credit{right:10px;bottom:6px;font-size:14px}
   .experience[data-demo="3"] .project-credit{left:10px;right:auto}
 }
