@@ -441,10 +441,13 @@ def wildlife_detections():
         seen_recordings.add(recording_id)
         timestamp = result.get("timestamp") or entry.get("read_at") or ""
         try:
-            parsed_timestamp = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-            if parsed_timestamp.tzinfo is None:
-                parsed_timestamp = parsed_timestamp.replace(tzinfo=timezone.utc)
-            detected_at = parsed_timestamp.timestamp()
+            if isinstance(timestamp, (int, float)):
+                detected_at = timestamp / 1000 if timestamp > 1e12 else timestamp
+            else:
+                parsed_timestamp = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+                if parsed_timestamp.tzinfo is None:
+                    parsed_timestamp = parsed_timestamp.replace(tzinfo=timezone.utc)
+                detected_at = parsed_timestamp.timestamp()
         except (AttributeError, TypeError, ValueError):
             continue
         if detected_at < cutoff:

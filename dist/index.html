@@ -8,7 +8,7 @@
   <title>BioGlow · Field experience</title>
   <link rel="preload" as="image" href="assets/night-garden.png">
   <link rel="stylesheet" href="scene.css?v=15">
-  <script src="script.js?v=17" defer></script>
+  <script src="script.js?v=18" defer></script>
   <script src="model-data.js" defer></script>
   <script src="scene-image.js" defer></script>
   <script src="scene-day-image.js" defer></script>
@@ -58,25 +58,12 @@
       </div>
     </section>
     <section class="migration-card" aria-label="Bird migration data" inert>
-      <header class="migration-card-header">
-        <div class="app-brand">G.L.O.W<span class="app-brand-dot">.</span></div>
-        <span class="app-live migration-api-state"><i></i><span data-api-state>CONNECTING</span></span>
-      </header>
       <div class="migration-card-content">
-        <p class="migration-card-overline">BIRDCAST / <span data-bird-region>CALIFORNIA</span></p>
-        <h2>Bird migration<span>.</span></h2>
-        <p class="migration-card-meta" data-birdcast-meta>Loading latest cached migration data…</p>
         <div class="migration-stats">
+          <article class="migration-stat"><span>LATEST TIME CHECKED</span><strong data-migration-updated>—</strong></article>
           <article class="migration-stat migration-stat-primary"><span>BIRDS IN FLIGHT</span><strong data-birds-in-flight>—</strong></article>
-          <article class="migration-stat"><span>TOTAL CROSSED</span><strong data-birds-crossed>—</strong></article>
-          <article class="migration-stat"><span>MIGRATION LEVEL</span><strong data-migration-level>—</strong></article>
-          <article class="migration-stat"><span>DIRECTION</span><strong data-migration-direction>—</strong></article>
-          <article class="migration-stat"><span>SPEED</span><strong data-migration-speed>—</strong></article>
-          <article class="migration-stat"><span>ALTITUDE</span><strong data-migration-altitude>—</strong></article>
+          <article class="migration-stat"><span>BIRDS CROSSED</span><strong data-birds-crossed>—</strong></article>
         </div>
-        <p class="migration-card-note" data-migration-note></p>
-        <a class="migration-source" data-birdcast-source href="https://dashboard.birdcast.org/region/US-CA" target="_blank" rel="noopener">Open BirdCast regional dashboard ↗</a>
-        <p class="migration-card-updated" data-migration-updated>Connecting to BirdCast data…</p>
       </div>
     </section>
     <div class="scene-atmosphere" aria-hidden="true"></div>

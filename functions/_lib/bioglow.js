@@ -3,7 +3,7 @@ const STATION_ENDPOINTS = Object.freeze({
   latest:'/v1/latest',
   mode:'/v1/station-mode',
   direction:'/v1/direction',
-  history:'/v1/history?source=microphone&range=1h',
+  history:'/v1/history?source=microphone&range=24h',
 });
 
 function stationApiBase(env) {

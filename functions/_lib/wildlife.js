@@ -21,7 +21,9 @@ export async function getWildlifeDetections(env) {
     if (seen.has(key)) continue;
     seen.add(key);
     const timestamp = result.timestamp || entry.read_at || '';
-    const detectedAt = Date.parse(timestamp);
+    const detectedAt = typeof timestamp === 'number'
+      ? (timestamp < 1e12 ? timestamp * 1000 : timestamp)
+      : Date.parse(timestamp);
     if (!Number.isFinite(detectedAt) || detectedAt < cutoff) continue;
     const top = predictions.reduce((best,item) => Number(item?.score) > Number(best?.score) ? item : best, predictions[0]);
     const name = top?.scientific_name;

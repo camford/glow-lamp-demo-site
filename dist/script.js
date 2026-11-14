@@ -215,15 +215,17 @@ const wildlifeDashboard = document.querySelector('.wildlife-dashboard');
 const wildlifeCollapseToggle = document.querySelector('.wildlife-collapse-toggle');
 const animalDemoMode = new URLSearchParams(window.location.search).get('animal-demo') === '1';
 const animalDemoPayload = {status:'ok',range:'24h',recordings_analyzed:0,species_detected:0,animals:[]};
+const clickedWildlife = new Map();
 const animalDetails = {
-  coyote: { call: 'assets/call-coyote-field.wav', species:'Canis latrans', name:'Coyote' },
-  owl: { call: 'assets/call-owl-field.wav', species:'Bubo virginianus', name:'Great horned owl' },
-  frog: { call: 'assets/call-frog-field.wav', species:'Batrachoseps stebbinsi', name:'Sierran tree frog' },
-  raccoon: { call: 'assets/call-raccoon-field.wav', species:'Procyon lotor', name:'Raccoon' }
+  coyote: { call: 'assets/call-coyote-field.wav', species:'Canis latrans', name:'Coyote', image:'assets/wildlife-coyote.png' },
+  owl: { call: 'assets/call-owl-field.wav', species:'Bubo virginianus', name:'Great horned owl', image:'assets/wildlife-great-horned-owl.png' },
+  frog: { call: 'assets/call-frog-field.wav', species:'Batrachoseps stebbinsi', name:'Sierran tree frog', image:'assets/wildlife-sierran-tree-frog.png' },
+  raccoon: { call: 'assets/call-raccoon-field.wav', species:'Procyon lotor', name:'Raccoon', image:'assets/wildlife-raccoon.png' }
 };
 let animalTapCount = 0;
 let currentCall = null;
 let wildlifeImageObserver = null;
+let wildlifeDemoGrowth = 0;
 
 wildlifeCollapseToggle.addEventListener('click', () => {
   const collapsed = wildlifeDashboard.classList.toggle('wildlife-collapsed');
@@ -233,25 +235,12 @@ wildlifeCollapseToggle.addEventListener('click', () => {
 
 function recordSighting(key, button) {
   const animal = animalDetails[key];
-  if (!animal || experience.dataset.demo !== '3') return;
+  if (!animal) return;
   if (currentCall) { currentCall.pause(); currentCall.currentTime = 0; }
   currentCall = new Audio(animal.call);
   currentCall.volume = .8;
   currentCall.play().catch(() => {});
-  if (animalDemoMode) {
-    const existing = animalDemoPayload.animals.find(item => item.scientific_name === animal.species);
-    if (existing) {
-      existing.detection_count += 1;
-      existing.last_detected = new Date().toISOString();
-    } else {
-      animalDemoPayload.animals.push({scientific_name:animal.species,common_name:animal.name,detection_count:1,last_detected:new Date().toISOString()});
-      animalDemoPayload.species_detected = animalDemoPayload.animals.length;
-    }
-    animalDemoPayload.recordings_analyzed += 1;
-    renderWildlifeCards(animalDemoPayload);
-    wildlifeStatus.textContent = 'DEMO';
-    wildlifeStatus.setAttribute('data-state', 'connected');
-  }
+  addClickedWildlife(animal);
 
   animalTapCount += 1;
   if (animalTapCount === 2) {
@@ -262,6 +251,42 @@ function recordSighting(key, button) {
   void button.offsetWidth;
   button.classList.add('is-calling');
   setTimeout(() => button.classList.remove('is-calling'), 750);
+}
+
+function addClickedWildlife(animal) {
+  const now = new Date().toISOString();
+  const item = clickedWildlife.get(animal.species) || {scientific_name:animal.species,common_name:animal.name,image_url:animal.image,detection_count:0,last_detected:''};
+  item.detection_count += 1;
+  item.last_detected = now;
+  clickedWildlife.set(animal.species,item);
+  if (animalDemoMode) {
+    const existing = animalDemoPayload.animals.find(entry => entry.scientific_name === animal.species);
+    if (existing) { existing.detection_count += 1; existing.last_detected = now; }
+    else animalDemoPayload.animals.push({...item});
+    animalDemoPayload.recordings_analyzed += 1;
+    animalDemoPayload.species_detected = animalDemoPayload.animals.length;
+    renderWildlifeCards(animalDemoPayload);
+  } else {
+    const animals = [...clickedWildlife.values()];
+    renderWildlifeCards({status:'ok',recordings_analyzed:animals.reduce((total,entry) => total+entry.detection_count,0),animals});
+    refreshWildlifeCards();
+  }
+  wildlifeStatus.textContent = animalDemoMode ? 'DEMO' : 'LIVE';
+  wildlifeStatus.setAttribute('data-state', 'connected');
+}
+
+function addTimedDemoSighting() {
+  const animals = Object.values(animalDetails);
+  const animal = animals[Math.floor(Math.random() * animals.length)];
+  const now = new Date().toISOString();
+  const existing = animalDemoPayload.animals.find(item => item.scientific_name === animal.species);
+  if (existing) { existing.detection_count += 1; existing.last_detected = now; }
+  else animalDemoPayload.animals.push({scientific_name:animal.species,common_name:animal.name,image_url:animal.image,detection_count:1,last_detected:now});
+  animalDemoPayload.recordings_analyzed += 1;
+  animalDemoPayload.species_detected = animalDemoPayload.animals.length;
+  renderWildlifeCards(animalDemoPayload);
+  wildlifeStatus.textContent = 'DEMO';
+  wildlifeStatus.setAttribute('data-state', 'connected');
 }
 
 wildlifeLayer.querySelectorAll('[data-animal]').forEach(button => {
@@ -347,9 +372,10 @@ function renderWildlifeCards(payload) {
     const photo = document.createElement('div');
     photo.className = 'sighting-image';
     const image = document.createElement('img');
-    image.alt = '';
+    image.alt = animal.common_name || animal.scientific_name;
     image.loading = 'lazy';
     image.dataset.species = animal.scientific_name;
+    if (animal.image_url) image.src = animal.image_url;
     photo.append(image);
     const info = document.createElement('div');
     info.className = 'sighting-info';
@@ -391,21 +417,18 @@ function renderWildlifeCards(payload) {
   wildlifeSightings.replaceChildren(...cards);
   if (!animalDemoMode) wildlifeSightings.querySelectorAll('.sighting-name[data-species]').forEach(loadWildlifeCommonName);
   wildlifeImageObserver?.disconnect();
-  if (animalDemoMode) {
-    wildlifeSightings.querySelectorAll('.sighting-image').forEach(node => node.classList.add('sighting-image-empty'));
-    wildlifeSightings.querySelectorAll('.sighting-image img').forEach(image => image.remove());
-  } else if ('IntersectionObserver' in window) {
+  if ('IntersectionObserver' in window) {
     wildlifeImageObserver = new IntersectionObserver(entries => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           wildlifeImageObserver.unobserve(entry.target);
-          loadWildlifeImage(entry.target);
+          if (!entry.target.hasAttribute('src')) loadWildlifeImage(entry.target);
         }
       });
     }, { root:wildlifeSightings, rootMargin:'100px' });
     wildlifeSightings.querySelectorAll('img[data-species]').forEach(image => wildlifeImageObserver.observe(image));
   } else {
-    wildlifeSightings.querySelectorAll('img[data-species]').forEach(loadWildlifeImage);
+    wildlifeSightings.querySelectorAll('img[data-species]').forEach(image => { if (!image.hasAttribute('src')) loadWildlifeImage(image); });
   }
 }
 
@@ -418,18 +441,37 @@ async function refreshWildlifeCards() {
   }
   try {
     const response = await fetch('/api/wildlife/detections', { cache:'no-store' });
-    if (!response.ok) throw new Error(`Wildlife API returned ${response.status}`);
-    renderWildlifeCards(await response.json());
+    const payload = await response.json();
+    if (!response.ok && !Array.isArray(payload.animals)) throw new Error(`Wildlife API returned ${response.status}`);
+    const combined = new Map((payload.animals || []).map(animal => [animal.scientific_name,{...animal}]));
+    clickedWildlife.forEach((animal,name) => {
+      const current = combined.get(name);
+      combined.set(name,current ? {...current,detection_count:current.detection_count+animal.detection_count,last_detected:animal.last_detected,image_url:animal.image_url} : {...animal});
+    });
+    payload.animals = [...combined.values()].sort((a,b) => b.detection_count-a.detection_count).slice(0,12);
+    payload.recordings_analyzed = payload.animals.reduce((total,animal) => total + animal.detection_count,0);
+    renderWildlifeCards(payload);
+    if (!response.ok) {
+      wildlifeStatus.textContent = 'OFFLINE';
+      wildlifeStatus.setAttribute('data-state', 'offline');
+    }
   } catch {
     wildlifeStatus.textContent = 'OFFLINE';
     wildlifeStatus.setAttribute('data-state', 'offline');
-    clearWildlifeCards('Unable to load station detections.');
+    if (clickedWildlife.size) {
+      const animals = [...clickedWildlife.values()];
+      renderWildlifeCards({status:'error',recordings_analyzed:animals.reduce((total,animal) => total+animal.detection_count,0),animals});
+      wildlifeStatus.textContent = 'OFFLINE';
+      wildlifeStatus.setAttribute('data-state', 'offline');
+    } else clearWildlifeCards('Unable to load station detections.');
   }
 }
 
 function stopWildlife() {
   clearInterval(wildlifePoll);
   wildlifePoll = 0;
+  clearInterval(wildlifeDemoGrowth);
+  wildlifeDemoGrowth = 0;
 }
 
 function startWildlife() {
@@ -438,6 +480,7 @@ function startWildlife() {
   wildlifePoll = setInterval(() => {
     if (experience.dataset.demo === '3') refreshWildlifeCards();
   }, 30000);
+  if (animalDemoMode) wildlifeDemoGrowth = setInterval(addTimedDemoSighting, 9000);
 }
 
 const migrationNodes = Object.fromEntries([
