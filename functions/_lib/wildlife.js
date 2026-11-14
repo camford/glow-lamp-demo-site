@@ -4,12 +4,14 @@ const INATURALIST_OBSERVATIONS = 'https://api.inaturalist.org/v1/observations';
 const INATURALIST_TAXA = 'https://api.inaturalist.org/v1/taxa';
 const VALID_SPECIES = /^[A-Za-z][A-Za-z .'-]{1,90}$/;
 const ALLOWED_IMAGE_HOSTS = new Set(['static.inaturalist.org','inaturalist-open-data.s3.amazonaws.com']);
+const WILDLIFE_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 export async function getWildlifeDetections(env) {
   const response = await fetchStationJson(env,'history');
   const data = response.data && typeof response.data === 'object' ? response.data : {};
   const counts = new Map();
   const seen = new Set();
+  const cutoff = Date.now() - WILDLIFE_WINDOW_MS;
   for (const entry of Array.isArray(data.entries)?data.entries:[]) {
     const result = entry?.result && typeof entry.result === 'object' ? entry.result : {};
     const predictions = Array.isArray(result.animals)?result.animals:[];
@@ -18,10 +20,12 @@ export async function getWildlifeDetections(env) {
     const key = id == null ? 'missing-recording-id' : String(id);
     if (seen.has(key)) continue;
     seen.add(key);
+    const timestamp = result.timestamp || entry.read_at || '';
+    const detectedAt = Date.parse(timestamp);
+    if (!Number.isFinite(detectedAt) || detectedAt < cutoff) continue;
     const top = predictions.reduce((best,item) => Number(item?.score) > Number(best?.score) ? item : best, predictions[0]);
     const name = top?.scientific_name;
     if (typeof name !== 'string' || !VALID_SPECIES.test(name)) continue;
-    const timestamp = result.timestamp || entry.read_at || '';
     const item = counts.get(name) || {count:0,last_detected:''};
     item.count += 1;
     if (String(timestamp) > item.last_detected) item.last_detected = String(timestamp);
@@ -34,7 +38,7 @@ export async function getWildlifeDetections(env) {
     .map(([scientific_name,value]) => ({scientific_name,detection_count:value.count,last_detected:value.last_detected}));
   return jsonResponse({
     status:response.http_status===200?'ok':'error',
-    range:'1h',
+    range:'24h',
     recordings_analyzed:[...counts.values()].reduce((total,item) => total+item.count,0),
     species_detected:counts.size,
     animals,

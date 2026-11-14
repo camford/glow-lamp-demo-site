@@ -207,6 +207,17 @@ const wildlifeCount = document.querySelector('.app-count');
 const wildlifeStatus = document.querySelector('[data-wildlife-api-state]');
 const wildlifeDashboard = document.querySelector('.wildlife-dashboard');
 const wildlifeCollapseToggle = document.querySelector('.wildlife-collapse-toggle');
+const animalDemoMode = new URLSearchParams(window.location.search).get('animal-demo') === '1';
+const animalDemoPayload = (() => {
+  const now = Date.now();
+  const minutesAgo = minutes => new Date(now - minutes * 60_000).toISOString();
+  return {status:'ok',range:'24h',recordings_analyzed:18,species_detected:4,animals:[
+    {scientific_name:'Canis latrans',common_name:'Coyote',detection_count:7,last_detected:minutesAgo(18)},
+    {scientific_name:'Procyon lotor',common_name:'Raccoon',detection_count:5,last_detected:minutesAgo(76)},
+    {scientific_name:'Batrachoseps stebbinsi',common_name:'Sierran tree frog',detection_count:3,last_detected:minutesAgo(242)},
+    {scientific_name:'Bubo virginianus',common_name:'Great horned owl',detection_count:3,last_detected:minutesAgo(603)},
+  ]};
+})();
 const animalDetails = {
   coyote: { call: 'assets/call-coyote-field.wav' },
   owl: { call: 'assets/call-owl-field.wav' },
@@ -313,9 +324,9 @@ function renderWildlifeCards(payload) {
   wildlifeStatus.textContent = payload.status === 'ok' ? 'LIVE' : 'OFFLINE';
   wildlifeStatus.setAttribute('data-state', payload.status === 'ok' ? 'connected' : 'offline');
   wildlifeCount.textContent = String(payload.recordings_analyzed || 0).padStart(2, '0');
-  wildlifeCount.setAttribute('aria-label', `${payload.recordings_analyzed || 0} model detections in the last hour`);
+  wildlifeCount.setAttribute('aria-label', `${payload.recordings_analyzed || 0} model detections in the last 24 hours`);
   if (!animals.length) {
-    clearWildlifeCards(payload.status === 'ok' ? 'No completed animal analyses in the last hour.' : 'Station animal history is unavailable.');
+    clearWildlifeCards(payload.status === 'ok' ? 'No completed animal analyses in the last 24 hours.' : 'Station animal history is unavailable.');
     return;
   }
 
@@ -367,9 +378,12 @@ function renderWildlifeCards(payload) {
     return card;
   });
   wildlifeSightings.replaceChildren(...cards);
-  wildlifeSightings.querySelectorAll('.sighting-name[data-species]').forEach(loadWildlifeCommonName);
+  if (!animalDemoMode) wildlifeSightings.querySelectorAll('.sighting-name[data-species]').forEach(loadWildlifeCommonName);
   wildlifeImageObserver?.disconnect();
-  if ('IntersectionObserver' in window) {
+  if (animalDemoMode) {
+    wildlifeSightings.querySelectorAll('.sighting-image').forEach(node => node.classList.add('sighting-image-empty'));
+    wildlifeSightings.querySelectorAll('.sighting-image img').forEach(image => image.remove());
+  } else if ('IntersectionObserver' in window) {
     wildlifeImageObserver = new IntersectionObserver(entries => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -385,6 +399,12 @@ function renderWildlifeCards(payload) {
 }
 
 async function refreshWildlifeCards() {
+  if (animalDemoMode) {
+    renderWildlifeCards(animalDemoPayload);
+    wildlifeStatus.textContent = 'DEMO';
+    wildlifeStatus.setAttribute('data-state', 'connected');
+    return;
+  }
   try {
     const response = await fetch('/api/wildlife/detections', { cache:'no-store' });
     if (!response.ok) throw new Error(`Wildlife API returned ${response.status}`);

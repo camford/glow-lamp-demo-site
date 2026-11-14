@@ -3,6 +3,7 @@
 
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import json
+from datetime import datetime, timezone
 import os
 from pathlib import Path
 import re
@@ -21,7 +22,7 @@ BIOGLOW_API_BASE = os.environ.get(
 USER_AGENT = "Mozilla/5.0 BioGlow-dashboard/1.0"
 INATURALIST_OBSERVATIONS_URL = "https://api.inaturalist.org/v1/observations"
 INATURALIST_TAXA_URL = "https://api.inaturalist.org/v1/taxa"
-HISTORY_PATH = "/v1/history?source=microphone&range=1h"
+HISTORY_PATH = "/v1/history?source=microphone&range=24h"
 STATION_MODE_PATH = "/v1/station-mode"
 DIRECTION_PATH = "/v1/direction"
 USER_AIM_PATH = "/v1/user-aim"
@@ -428,6 +429,7 @@ def wildlife_detections():
     data = response.get("data") or {}
     counts = {}
     seen_recordings = set()
+    cutoff = time.time() - 24 * 60 * 60
     for entry in data.get("entries", []):
         result = entry.get("result") or {}
         predictions = result.get("animals") or []
@@ -437,6 +439,16 @@ def wildlife_detections():
         if recording_id in seen_recordings:
             continue
         seen_recordings.add(recording_id)
+        timestamp = result.get("timestamp") or entry.get("read_at") or ""
+        try:
+            parsed_timestamp = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+            if parsed_timestamp.tzinfo is None:
+                parsed_timestamp = parsed_timestamp.replace(tzinfo=timezone.utc)
+            detected_at = parsed_timestamp.timestamp()
+        except (AttributeError, TypeError, ValueError):
+            continue
+        if detected_at < cutoff:
+            continue
         top_prediction = max(
             predictions,
             key=lambda item: item.get("score", 0) if isinstance(item.get("score", 0), (int, float)) else 0,
@@ -446,7 +458,7 @@ def wildlife_detections():
             continue
         item = counts.setdefault(name, {"count": 0, "last_detected": ""})
         item["count"] += 1
-        item["last_detected"] = max(item["last_detected"], result.get("timestamp") or entry.get("read_at") or "")
+        item["last_detected"] = max(item["last_detected"], timestamp)
 
     with _recent_wildlife_lock:
         _recent_wildlife_species = set(counts) if response.get("http_status") == 200 else set()
@@ -460,7 +472,7 @@ def wildlife_detections():
     ]
     return {
         "status": "ok" if response.get("http_status") == 200 else "error",
-        "range": "1h",
+        "range": "24h",
         "recordings_analyzed": sum(item["count"] for item in counts.values()),
         "species_detected": len(counts),
         "animals": animals,
