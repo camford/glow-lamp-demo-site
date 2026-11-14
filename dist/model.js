@@ -27,7 +27,7 @@
     ${cameraSource}
     void main(){vec3 position=aPosition+uPartOffset;vHeight=aPosition.y;vNormal=aNormal;vPosition=position;vView=uEye-position;gl_Position=project(position);}`;
   const lampFragment=`precision mediump float;varying vec3 vNormal,vPosition,vView;varying float vHeight;
-    uniform vec3 uColor,uLightColor;uniform float uGlow,uClipTop,uGrain,uRoughness,uDiffuser,uDayMix,uDirectional,uBeamStrength,uLampIntensity;
+    uniform vec3 uColor,uLightColor,uLiveColor;uniform float uGlow,uClipTop,uGrain,uRoughness,uDiffuser,uDayMix,uDirectional,uBeamStrength,uLampIntensity,uBeamInner,uBeamOuter,uLiveLight;
     uniform vec2 uBeamDirection;
     const float PI=3.14159265;
     vec3 toneMap(vec3 x){
@@ -52,11 +52,17 @@
       vec3 v=normalize(vView);
       if(dot(n,v)<0.0)n=-n;
       if(uDiffuser>.5){
+        if(uLiveLight>=0.0){
+          float outputLevel=clamp(uLiveLight,0.0,1.0);
+          vec3 liveSurface=mix(vec3(.035,.03,.026),uLiveColor,outputLevel);
+          gl_FragColor=vec4(liveSurface,1.0);
+          return;
+        }
         float facing=abs(dot(n,v));
         float softEdge=.80+.20*smoothstep(0.0,.85,facing);
         vec3 transmission=uColor*(.38+uGlow*.88)*softEdge;
         if(uDirectional>.5){
-          float segment=smoothstep(.68,.91,dot(normalize(vPosition.xz),uBeamDirection));
+          float segment=smoothstep(uBeamInner,uBeamOuter,dot(normalize(vPosition.xz),uBeamDirection));
           transmission=vec3(.11)+uColor*uGlow*uBeamStrength*segment*1.25*softEdge;
         }
         transmission+=vec3(.035,.026,.014);
@@ -86,7 +92,7 @@
     ${cameraSource}
     void main(){vUV=aUV;vWorld=aPosition;gl_Position=project(aPosition);}`;
   const sceneFragment=`precision mediump float;varying vec2 vUV;varying vec3 vWorld;
-    uniform sampler2D uTextureNight,uTextureDay;uniform float uGround,uDayMix,uDirectional,uBeamStrength,uBeamDistance,uLampIntensity;uniform vec3 uLightColor;uniform vec2 uBeamDirection;
+    uniform sampler2D uTextureNight,uTextureDay;uniform float uGround,uDayMix,uDirectional,uBeamStrength,uBeamDistance,uLampIntensity,uBeamInner,uBeamOuter;uniform vec3 uLightColor;uniform vec2 uBeamDirection;
     void main(){
       vec3 nightBase=texture2D(uTextureNight,vUV).rgb;
       vec3 dayBase=texture2D(uTextureDay,vUV).rgb;
@@ -96,7 +102,7 @@
       float pool=1.0-smoothstep(13.0,31.0,distanceFromLamp);
       float penumbra=1.0-smoothstep(26.0,46.0,distanceFromLamp);
       float alignment=dot(vWorld.xz/max(distanceFromLamp,.001),uBeamDirection);
-      float beam=smoothstep(.68,.91,alignment)*(1.0-smoothstep(uBeamDistance+5.0,uBeamDistance+40.0,distanceFromLamp));
+      float beam=smoothstep(uBeamInner,uBeamOuter,alignment)*(1.0-smoothstep(uBeamDistance+5.0,uBeamDistance+40.0,distanceFromLamp));
       pool=mix(pool,beam*uBeamStrength,uDirectional);
       penumbra=mix(penumbra,beam*uBeamStrength*.35,uDirectional);
       pool*=uLampIntensity;
@@ -112,7 +118,7 @@
     ${cameraSource}
     void main(){vec3 p=aPosition+(uOverhead>.5?vec3(0.0):uOffset);vUV=aUV;vWorld=p;gl_Position=project(p);}`;
   const personFragment=`precision highp float;varying vec2 vUV;varying vec3 vWorld;
-    uniform sampler2D uPerson;uniform float uOpacity,uOverhead,uBeamStrength,uBeamDistance;uniform vec2 uFrame,uBeamDirection;
+    uniform sampler2D uPerson;uniform float uOpacity,uOverhead,uBeamStrength,uBeamDistance,uBeamInner,uBeamOuter;uniform vec2 uFrame,uBeamDirection;
     float mirror(float value){float pair=mod(value,2.0);return pair<1.0?pair:2.0-pair;}
     void main(){
       vec2 atlasUV;
@@ -128,7 +134,7 @@
       if(uOverhead>.5){
         float radius=length(vWorld.xz);
         float alignment=dot(vWorld.xz/max(radius,.001),uBeamDirection);
-        float sector=smoothstep(.68,.91,alignment);
+        float sector=smoothstep(uBeamInner,uBeamOuter,alignment);
         float reach=1.0-smoothstep(uBeamDistance+5.0,uBeamDistance+40.0,radius);
         float beam=sector*reach*uBeamStrength;
         color=photo.rgb*(.54+.45*beam)+vec3(.26,.17,.065)*beam;
@@ -143,13 +149,13 @@
   const lampProgram=program(lampVertex,lampFragment),sceneProgram=program(sceneVertex,sceneFragment);
   let personProgram=null,personLoc=null;
   function cameraLocations(p){return {eye:gl.getUniformLocation(p,'uEye'),right:gl.getUniformLocation(p,'uRight'),up:gl.getUniformLocation(p,'uUp'),forward:gl.getUniformLocation(p,'uForward'),aspect:gl.getUniformLocation(p,'uAspect')}}
-  const lampLoc={camera:cameraLocations(lampProgram),position:gl.getAttribLocation(lampProgram,'aPosition'),normal:gl.getAttribLocation(lampProgram,'aNormal'),offset:gl.getUniformLocation(lampProgram,'uPartOffset'),color:gl.getUniformLocation(lampProgram,'uColor'),lightColor:gl.getUniformLocation(lampProgram,'uLightColor'),glow:gl.getUniformLocation(lampProgram,'uGlow'),clip:gl.getUniformLocation(lampProgram,'uClipTop'),grain:gl.getUniformLocation(lampProgram,'uGrain'),roughness:gl.getUniformLocation(lampProgram,'uRoughness'),diffuser:gl.getUniformLocation(lampProgram,'uDiffuser'),dayMix:gl.getUniformLocation(lampProgram,'uDayMix'),directional:gl.getUniformLocation(lampProgram,'uDirectional'),beamDirection:gl.getUniformLocation(lampProgram,'uBeamDirection'),beamStrength:gl.getUniformLocation(lampProgram,'uBeamStrength'),intensity:gl.getUniformLocation(lampProgram,'uLampIntensity')};
-  const sceneLoc={camera:cameraLocations(sceneProgram),position:gl.getAttribLocation(sceneProgram,'aPosition'),uv:gl.getAttribLocation(sceneProgram,'aUV'),night:gl.getUniformLocation(sceneProgram,'uTextureNight'),day:gl.getUniformLocation(sceneProgram,'uTextureDay'),dayMix:gl.getUniformLocation(sceneProgram,'uDayMix'),ground:gl.getUniformLocation(sceneProgram,'uGround'),lightColor:gl.getUniformLocation(sceneProgram,'uLightColor'),directional:gl.getUniformLocation(sceneProgram,'uDirectional'),beamDirection:gl.getUniformLocation(sceneProgram,'uBeamDirection'),beamStrength:gl.getUniformLocation(sceneProgram,'uBeamStrength'),beamDistance:gl.getUniformLocation(sceneProgram,'uBeamDistance'),intensity:gl.getUniformLocation(sceneProgram,'uLampIntensity')};
+  const lampLoc={camera:cameraLocations(lampProgram),position:gl.getAttribLocation(lampProgram,'aPosition'),normal:gl.getAttribLocation(lampProgram,'aNormal'),offset:gl.getUniformLocation(lampProgram,'uPartOffset'),color:gl.getUniformLocation(lampProgram,'uColor'),lightColor:gl.getUniformLocation(lampProgram,'uLightColor'),liveColor:gl.getUniformLocation(lampProgram,'uLiveColor'),liveLight:gl.getUniformLocation(lampProgram,'uLiveLight'),glow:gl.getUniformLocation(lampProgram,'uGlow'),clip:gl.getUniformLocation(lampProgram,'uClipTop'),grain:gl.getUniformLocation(lampProgram,'uGrain'),roughness:gl.getUniformLocation(lampProgram,'uRoughness'),diffuser:gl.getUniformLocation(lampProgram,'uDiffuser'),dayMix:gl.getUniformLocation(lampProgram,'uDayMix'),directional:gl.getUniformLocation(lampProgram,'uDirectional'),beamDirection:gl.getUniformLocation(lampProgram,'uBeamDirection'),beamStrength:gl.getUniformLocation(lampProgram,'uBeamStrength'),beamInner:gl.getUniformLocation(lampProgram,'uBeamInner'),beamOuter:gl.getUniformLocation(lampProgram,'uBeamOuter'),intensity:gl.getUniformLocation(lampProgram,'uLampIntensity')};
+  const sceneLoc={camera:cameraLocations(sceneProgram),position:gl.getAttribLocation(sceneProgram,'aPosition'),uv:gl.getAttribLocation(sceneProgram,'aUV'),night:gl.getUniformLocation(sceneProgram,'uTextureNight'),day:gl.getUniformLocation(sceneProgram,'uTextureDay'),dayMix:gl.getUniformLocation(sceneProgram,'uDayMix'),ground:gl.getUniformLocation(sceneProgram,'uGround'),lightColor:gl.getUniformLocation(sceneProgram,'uLightColor'),directional:gl.getUniformLocation(sceneProgram,'uDirectional'),beamDirection:gl.getUniformLocation(sceneProgram,'uBeamDirection'),beamStrength:gl.getUniformLocation(sceneProgram,'uBeamStrength'),beamDistance:gl.getUniformLocation(sceneProgram,'uBeamDistance'),beamInner:gl.getUniformLocation(sceneProgram,'uBeamInner'),beamOuter:gl.getUniformLocation(sceneProgram,'uBeamOuter'),intensity:gl.getUniformLocation(sceneProgram,'uLampIntensity')};
   function preparePersonRenderer(){
     if(personProgram)return;
     try{
       personProgram=program(personVertex,personFragment);
-      personLoc={camera:cameraLocations(personProgram),position:gl.getAttribLocation(personProgram,'aPosition'),uv:gl.getAttribLocation(personProgram,'aUV'),texture:gl.getUniformLocation(personProgram,'uPerson'),opacity:gl.getUniformLocation(personProgram,'uOpacity'),overhead:gl.getUniformLocation(personProgram,'uOverhead'),offset:gl.getUniformLocation(personProgram,'uOffset'),frame:gl.getUniformLocation(personProgram,'uFrame'),beamDirection:gl.getUniformLocation(personProgram,'uBeamDirection'),beamStrength:gl.getUniformLocation(personProgram,'uBeamStrength'),beamDistance:gl.getUniformLocation(personProgram,'uBeamDistance')};
+      personLoc={camera:cameraLocations(personProgram),position:gl.getAttribLocation(personProgram,'aPosition'),uv:gl.getAttribLocation(personProgram,'aUV'),texture:gl.getUniformLocation(personProgram,'uPerson'),opacity:gl.getUniformLocation(personProgram,'uOpacity'),overhead:gl.getUniformLocation(personProgram,'uOverhead'),offset:gl.getUniformLocation(personProgram,'uOffset'),frame:gl.getUniformLocation(personProgram,'uFrame'),beamDirection:gl.getUniformLocation(personProgram,'uBeamDirection'),beamStrength:gl.getUniformLocation(personProgram,'uBeamStrength'),beamDistance:gl.getUniformLocation(personProgram,'uBeamDistance'),beamInner:gl.getUniformLocation(personProgram,'uBeamInner'),beamOuter:gl.getUniformLocation(personProgram,'uBeamOuter')};
     }catch(error){console.error('Walking person renderer unavailable:',error)}
   }
   const specs=[
@@ -277,11 +283,25 @@
   overheadImage.src=window.BIOGLOW_OVERHEAD_IMAGE;
   // Approximate 2700 K tungsten light in display RGB. All demos share this hue.
   const lampLightColor=[1,.69,.4];
+  let liveLampColor=null,liveLampOn=null,liveLampBrightness=null;
+  window.addEventListener('bioglow:light-state',event=>{
+    const {color,on,brightness}=event.detail||{};
+    liveLampColor=typeof color==='string'&&/^#[0-9a-f]{6}$/i.test(color)?[1,3,5].map(index=>parseInt(color.slice(index,index+2),16)/255):null;
+    liveLampOn=typeof on==='boolean'?on:null;
+    liveLampBrightness=Number.isFinite(brightness)?Math.max(0,Math.min(100,brightness))/100:null;
+    draw();
+  });
   let yaw=0,elevation=.16,radius=72,frameX=0,focusY=17,drag=null,dayMix=0,dayTarget=0,fadeFrame=0;
   let activeDemo=0,returnPose=null,wildlifeReturnPose=null,migrationReturnPose=null,insideReturnPose=null,cameraFrame=0;
   let explodeProgress=0,explodeFrame=0;
   const personPosition={x:personX,z:0};
   let personTarget=null,personPath=[],personRow=3,personFrame=1,personBob=0,walkPhase=0,walkFrame=0,lastWalkTime=0;
+  function notifyPersonDirection(settled=false){
+    if(activeDemo!==2)return;
+    const distance=Math.hypot(personPosition.x,personPosition.z);
+    const degrees=(Math.atan2(personPosition.z,personPosition.x)*180/Math.PI+360)%360;
+    window.dispatchEvent(new CustomEvent('bioglow:person-moved',{detail:{angle:Math.round(degrees)%360,distance,settled}}));
+  }
   function normalize(v){const l=Math.hypot(...v)||1;return v.map(x=>x/l)}
   function cross(a,b){return [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]}
   function camera(){
@@ -346,6 +366,7 @@
       }
     }
     if(!personTarget){personFrame=1;personBob=0;walkFrame=0;lastWalkTime=0;}
+    notifyPersonDirection(!personTarget);
     draw();
     if(personTarget)walkFrame=requestAnimationFrame(walk);
   }
@@ -363,9 +384,10 @@
     const sidePadding=bounds.width*.22;
     return clientX>=bounds.left+sidePadding&&clientX<=bounds.right-sidePadding&&clientY>=bounds.top&&clientY<=bounds.bottom;
   }
-  function stopPersonDrag(){
+  function stopPersonDrag(moved=false){
     personFrame=1;
     personBob=0;
+    if(moved)notifyPersonDirection(true);
     draw();
   }
   function setCamera(loc,c){
@@ -380,11 +402,18 @@
     gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
     const c=camera();
     const mode=Number(experience.dataset.demo)||0;
-    const lampIntensity=(mode===4?Number(experience.dataset.migrationIntensity||1):1)*(mode===1?1-dayMix:1);
+    const liveGlow=mode===0&&liveLampColor!==null&&liveLampOn!==null;
+    const liveOutputLevel=liveLampOn?(liveLampBrightness??1):0;
+    const baseLampIntensity=mode===0&&liveGlow?liveOutputLevel:(mode===4?Math.max(0,Math.min(1,Number(experience.dataset.migrationIntensity??1))):1)*(mode===1?1-dayMix:1);
     const beamDistance=Math.max(1,Math.hypot(personPosition.x,personPosition.z));
     const beamDirection=[personPosition.x/beamDistance,personPosition.z/beamDistance];
-    const beamProgress=Math.max(0,Math.min(1,(beamDistance-35)/150));
-    const beamStrength=.85+1.15*beamProgress*beamProgress*(3-2*beamProgress);
+    const beamProgress=Math.max(0,Math.min(1,(beamDistance-34)/220));
+    const beamEase=beamProgress*beamProgress*(3-2*beamProgress);
+    const beamStrength=.65+1.35*beamEase;
+    const beamHalfAngle=.22+.46*beamEase;
+    const beamInner=Math.cos(beamHalfAngle);
+    const beamOuter=Math.cos(Math.max(.06,beamHalfAngle-.12));
+    const lampIntensity=baseLampIntensity*(mode===2 ? .48+.52*beamEase : 1);
     if(mode===3){
       const lampRelative=[-c.eye[0],17-c.eye[1],-c.eye[2]];
       const lampDepth=lampRelative.reduce((sum,value,i)=>sum+value*c.forward[i],0);
@@ -412,8 +441,10 @@
       gl.uniform2fv(sceneLoc.beamDirection,beamDirection);
       gl.uniform1f(sceneLoc.beamStrength,beamStrength);
       gl.uniform1f(sceneLoc.beamDistance,beamDistance);
+      gl.uniform1f(sceneLoc.beamInner,beamInner);
+      gl.uniform1f(sceneLoc.beamOuter,beamOuter);
       gl.uniform1f(sceneLoc.intensity,lampIntensity);
-      gl.uniform3fv(sceneLoc.lightColor,lampLightColor);
+      gl.uniform3fv(sceneLoc.lightColor,mode===0&&liveLampColor?liveLampColor:lampLightColor);
       gl.enableVertexAttribArray(sceneLoc.position);gl.enableVertexAttribArray(sceneLoc.uv);
       for(const mesh of surfaces){
         gl.uniform1f(sceneLoc.ground,mesh.ground?1:0);
@@ -455,6 +486,8 @@
       gl.uniform2fv(personLoc.beamDirection,beamDirection);
       gl.uniform1f(personLoc.beamStrength,beamStrength);
       gl.uniform1f(personLoc.beamDistance,beamDistance);
+      gl.uniform1f(personLoc.beamInner,beamInner);
+      gl.uniform1f(personLoc.beamOuter,beamOuter);
       if(overheadReady&&overheadOpacity>.01){
         gl.disable(gl.DEPTH_TEST);
         gl.bindTexture(gl.TEXTURE_2D,overheadTexture);
@@ -469,12 +502,16 @@
       gl.depthMask(true);gl.disable(gl.BLEND);
     }
     gl.useProgram(lampProgram);setCamera(lampLoc.camera,c);
-    gl.uniform3fv(lampLoc.lightColor,lampLightColor);
+    gl.uniform3fv(lampLoc.lightColor,mode===0&&liveLampColor?liveLampColor:lampLightColor);
+    gl.uniform3fv(lampLoc.liveColor,liveLampColor||[1,.69,.4]);
+    gl.uniform1f(lampLoc.liveLight,liveGlow?(liveLampOn?1:0):-1);
     gl.uniform1f(lampLoc.dayMix,dayMix);
     gl.uniform1f(lampLoc.intensity,lampIntensity);
     gl.uniform1f(lampLoc.directional,mode===2?1:0);
     gl.uniform2fv(lampLoc.beamDirection,beamDirection);
     gl.uniform1f(lampLoc.beamStrength,beamStrength);
+    gl.uniform1f(lampLoc.beamInner,beamInner);
+    gl.uniform1f(lampLoc.beamOuter,beamOuter);
     gl.enableVertexAttribArray(lampLoc.position);gl.enableVertexAttribArray(lampLoc.normal);
     const explodedHeights={foot:0,diffuser:7,upper:21,dome:34};
     for(const mesh of meshes){
@@ -635,6 +672,7 @@
             personFrame=Math.floor(walkPhase)%4;
             personBob=.5*Math.abs(Math.sin(walkPhase*Math.PI));
             personPosition.x=next.x;personPosition.z=next.z;
+            notifyPersonDirection(false);
             draw();
           }
         }
@@ -649,12 +687,12 @@
     drag.x=e.clientX;drag.y=e.clientY;draw();
   });
   canvas.addEventListener('pointerup',e=>{
-    if(drag?.person)stopPersonDrag();
+    if(drag?.person)stopPersonDrag(drag.moved);
     else if(drag?.locked&&!drag.moved&&activeDemo===2)startWalk(groundPoint(e.clientX,e.clientY));
     drag=null;
     canvas.style.cursor=personAt(e.clientX,e.clientY)?'grab':'';
   });
-  canvas.addEventListener('pointercancel',()=>{if(drag?.person)stopPersonDrag();drag=null;canvas.style.cursor=''});
+  canvas.addEventListener('pointercancel',()=>{if(drag?.person)stopPersonDrag(drag.moved);drag=null;canvas.style.cursor=''});
   canvas.addEventListener('pointerleave',()=>{if(!drag)canvas.style.cursor=''});
   canvas.addEventListener('keydown',e=>{
     if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))return;

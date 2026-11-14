@@ -103,33 +103,32 @@
 @media(max-width:480px){.wildlife-instruction{left:7px;top:90px;width:calc(100% - 215px);font-size:10px;padding:8px 9px}.glow-phone{width:45vw;min-width:170px;max-width:195px;right:7px;top:90px;height:430px;min-height:0}.phone-frame{padding:5px;border-radius:27px}.phone-screen{border-radius:22px}.phone-island{height:16px}.phone-status{height:30px;padding:8px 15px 0}.app-header{height:34px;padding-inline:12px}.app-brand{font-size:10px}.app-content{height:calc(100% - 86px);padding:14px 12px 0}.app-content h2{font-size:29px}.app-overline,.app-list-heading{font-size:7px}.sighting-image{width:32px;height:32px}.sighting-row{min-height:48px;gap:6px}.sighting-name{font-size:9px}.sighting-time{font-size:8px}}
 @media(prefers-reduced-motion:reduce){.glow-phone,.wildlife-animal{transition:none}.sighting-row,.wildlife-animal.is-calling img{animation:none}}
 
-/* Migration watch keeps the map beside the lamp. */
-.migration-phone{position:absolute;z-index:4;top:clamp(96px,14vh,145px);left:clamp(15px,3.3vw,48px);width:clamp(245px,31vw,314px);height:min(76vh,612px);min-height:455px;opacity:0;transform:translateX(-32px) scale(.97);pointer-events:none;transition:opacity .6s ease,transform .7s cubic-bezier(.2,.8,.2,1)}
-.experience[data-demo="4"] .migration-phone{opacity:1;transform:translateX(0) scale(1);pointer-events:auto}
-.migration-screen{display:flex;flex-direction:column}
-.migration-screen .phone-status,.migration-screen .app-header{flex:none}
-.migration-heading{flex:none;padding:21px 20px 16px}
-.migration-heading .app-overline{display:block;margin:0 0 8px}
-.migration-heading h2{margin:0;color:#19352c;font:400 30px/.95 Georgia,serif;letter-spacing:-.05em}
-.migration-heading h2 span{color:#8fb853}
-.migration-heading p{margin:10px 0 0;color:#6a8075;font-size:10px}
-.migration-map{position:relative;flex:1;min-height:180px;margin:0 12px;border:1px solid #bed0c3;border-radius:12px;background:#dde7d9;overflow:hidden}
-.migration-tile-layer{position:absolute;inset:0;overflow:hidden;filter:saturate(.72) brightness(1.03);pointer-events:none}
-.migration-tile-layer img{position:absolute;display:block;width:256px;height:256px;max-width:none;pointer-events:none}
-.migration-location{position:absolute;z-index:4;left:50%;top:50%;width:12px;height:12px;transform:translate(-50%,-50%);pointer-events:none}
-.migration-location-pulse{position:absolute;left:50%;top:50%;width:44px;height:44px;border-radius:50%;transform:translate(-50%,-50%);background:rgba(229,180,83,.2);border:1px solid rgba(184,133,43,.55)}
-.migration-location-dot{position:absolute;inset:0;border:3px solid #fff;border-radius:50%;background:#cf8038;box-shadow:0 1px 8px rgba(47,56,42,.45)}
-.migration-location-label{position:absolute;left:18px;bottom:16px;white-space:nowrap;padding:5px 7px;border-radius:4px;background:#eef2e6;color:#39564b;font-size:7px;line-height:1.3;font-weight:800;letter-spacing:.06em;box-shadow:0 1px 4px rgba(31,61,49,.17)}
-.migration-flock{position:absolute;z-index:3;width:84px;height:62px;padding:3px;border-radius:50%;background:rgba(238,243,228,.78);color:#244e4b;box-shadow:0 3px 11px rgba(36,75,68,.24);transform:translate(-50%,-50%);pointer-events:none}
-.migration-flock svg{display:block;width:100%;height:100%;pointer-events:none}
-.migration-attribution{position:absolute;z-index:5;right:3px;bottom:3px;padding:2px 3px;border-radius:2px;background:rgba(255,255,255,.85);color:#33514a;font-size:8px;line-height:1.1;text-decoration:none}
-.migration-footer{flex:none;min-height:54px;padding:0 20px 13px;display:flex;align-items:center;justify-content:space-between;color:#537264;font-size:9px;font-weight:800;letter-spacing:.12em}
-.migration-footer>span{display:flex;align-items:center;gap:7px}
-.migration-footer-dot{display:block;width:6px;height:6px;border-radius:50%;background:#8caf65;box-shadow:0 0 6px #8caf65}
-.migration-output{color:#19352c;font-size:13px;letter-spacing:0}
-@media(max-width:700px){.migration-phone{width:clamp(205px,41vw,264px);left:12px;top:103px;height:min(69vh,525px);min-height:405px}.migration-heading{padding:16px 16px 12px}.migration-heading h2{font-size:26px}}
-@media(max-width:480px){.migration-phone{width:45vw;min-width:170px;max-width:195px;left:7px;top:90px;height:430px;min-height:0}.migration-heading{padding:12px 12px 9px}.migration-heading h2{font-size:22px}.migration-heading p{font-size:9px;margin-top:7px}.migration-map{margin-inline:7px}.migration-flock{width:62px;height:46px}.migration-location-label{left:50%;bottom:22px;transform:translateX(-50%);font-size:6px}.migration-footer{padding-inline:11px;font-size:7px}.migration-output{font-size:11px}}
-@media(prefers-reduced-motion:reduce){.migration-phone{transition:none}}
+/* BirdCast migration is presented as a standalone data card. */
+.migration-card{position:absolute;z-index:4;top:clamp(105px,17vh,160px);left:clamp(20px,5vw,76px);width:min(430px,calc(100% - 40px));padding:22px 24px 20px;border:1px solid rgba(229,235,215,.8);border-radius:20px;background:rgba(235,238,222,.97);color:#1c3025;box-shadow:0 24px 70px rgba(0,0,0,.36);backdrop-filter:blur(12px);opacity:0;transform:translateX(-24px) scale(.98);pointer-events:none;transition:opacity .45s ease,transform .55s cubic-bezier(.2,.8,.2,1)}
+.experience[data-demo="4"] .migration-card{opacity:1;transform:translateX(0) scale(1);pointer-events:auto}
+.migration-card-header{display:flex;align-items:center;justify-content:space-between;padding-bottom:13px;border-bottom:1px solid rgba(52,79,55,.2)}
+.migration-card-header .app-brand{font-size:12px}
+.migration-card-header .app-live{font-size:8px}
+.migration-card-overline{margin:19px 0 8px;color:#73846a;font-size:9px;font-weight:800;letter-spacing:.16em}
+.migration-card-content h2{margin:0;font:400 39px/.98 Georgia,serif;letter-spacing:-.055em}
+.migration-card-content h2 span{color:#8fb853}
+.migration-card-meta{margin:9px 0 16px;color:#66796b;font-size:10px;line-height:1.4}
+.migration-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.migration-stat{min-width:0;min-height:68px;padding:11px 13px;display:flex;flex-direction:column;justify-content:space-between;gap:8px;border:1px solid rgba(52,79,55,.16);border-radius:10px;background:rgba(255,255,255,.54)}
+.migration-stat>span{color:#73846a;font-size:8px;font-weight:800;letter-spacing:.12em}
+.migration-stat strong{color:#244432;font:600 19px/1.05 'DM Sans',Arial,sans-serif;overflow-wrap:anywhere}
+.migration-stat-primary{grid-column:1/-1;min-height:106px;flex-direction:row;align-items:flex-end;background:#1c3c2d;border-color:#1c3c2d}
+.migration-stat-primary>span{padding-bottom:5px;color:#d0dfc4}
+.migration-stat-primary strong{color:#f1f4e9;font-size:42px;letter-spacing:-.05em}
+.migration-card-note{margin:14px 0 0;padding:10px 12px;border-left:2px solid #9bb77a;background:rgba(218,229,207,.58);color:#536859;font-size:10px;line-height:1.45}
+.migration-source{display:inline-block;margin-top:14px;color:#42634d;font-size:10px;font-weight:700;text-decoration:underline;text-decoration-color:rgba(66,99,77,.35);text-underline-offset:3px}
+.migration-source:hover{color:#1d3d2b}
+.migration-card-updated{margin:9px 0 0;color:#788779;font-size:8px}
+.migration-api-state[data-state="offline"]{color:#a25345}
+.migration-api-state[data-state="offline"] i{background:#bf6958;box-shadow:0 0 7px #bf6958}
+@media(max-width:700px){.migration-card{top:103px;left:12px;width:min(430px,calc(100% - 24px));padding:17px}.migration-card-content h2{font-size:32px}.migration-stat{min-height:62px;padding:9px 10px}.migration-stat-primary{min-height:92px}.migration-stat-primary strong{font-size:35px}}
+@media(max-width:480px){.migration-card{top:90px;left:7px;width:calc(100% - 14px);padding:14px;border-radius:16px}.migration-card-overline{margin-top:14px;font-size:8px}.migration-card-content h2{font-size:28px}.migration-card-meta{font-size:9px;margin-bottom:11px}.migration-stats{gap:6px}.migration-stat{min-height:56px;padding:8px}.migration-stat>span{font-size:7px}.migration-stat strong{font-size:16px}.migration-stat-primary{min-height:80px}.migration-stat-primary strong{font-size:31px}.migration-card-note{margin-top:10px;font-size:9px}}
+@media(prefers-reduced-motion:reduce){.migration-card{transition:none}}
 
 /* A consistent light sans serif keeps the demo navigation understated. */
 .demo-tab{gap:6px}
@@ -150,6 +149,23 @@
   .rotate-hint-icon{font-size:25px;line-height:1;color:#d8e6ad}
 }
 
+/* Sensor markers sit over the exploded hood in See inside. */
+.sensor-overlay{position:absolute;inset:0;z-index:6;pointer-events:none;opacity:0;transition:opacity .25s}
+.experience[data-demo="5"] .sensor-overlay{opacity:1}
+.sensor-connectors{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.sensor-connectors path{fill:none;stroke:rgba(222,237,183,.84);stroke-width:1.5;vector-effect:non-scaling-stroke;filter:drop-shadow(0 1px 4px rgba(0,0,0,.75))}
+.sensor-connectors path::after{content:''}
+.sensor-card{position:absolute;z-index:1;width:250px;min-height:88px;padding:14px;display:flex;align-items:flex-start;gap:11px;border:1px solid rgba(221,233,193,.42);background:rgba(12,27,18,.93);box-shadow:0 12px 36px rgba(0,0,0,.34);color:#e9eedf}
+.sensor-icon{flex:none;width:27px;height:27px;border:1px solid rgba(226,239,184,.7);border-radius:50%;display:grid;place-items:center;color:#e3efba;font-size:16px;line-height:1}
+.sensor-card>div{display:grid;gap:6px}
+.sensor-card strong{font:600 13px/1.2 'DM Sans',Arial,sans-serif;color:#e3efba}
+.sensor-card>div>span{font:400 12px/1.45 'DM Sans',Arial,sans-serif;color:#d5ddcf}
+.sensor-microphone{left:6%;top:21%}
+.sensor-lux{right:6%;top:21%}
+.sensor-distance{right:6%;top:48%}
+.sensor-migration{left:6%;top:54%}
+@media(max-width:700px){.sensor-card{width:min(230px,42vw);min-height:0;padding:10px;gap:8px}.sensor-icon{width:23px;height:23px;font-size:14px}.sensor-card strong{font-size:12px}.sensor-card>div>span{font-size:11px}.sensor-microphone,.sensor-migration{left:2%}.sensor-lux,.sensor-distance{left:auto;right:2%}.sensor-microphone,.sensor-lux{top:18%}.sensor-distance,.sensor-migration{top:51%}}
+
 /* Fit the entire interactive scene inside a short landscape phone viewport. */
 @media (max-height:500px) and (orientation:landscape){
   .experience{height:100svh;min-height:0;max-height:none}
@@ -162,9 +178,9 @@
   .light-switch{top:60px;right:10px;width:142px;height:34px}
   .light-switch-label{font-size:12px}
   .wildlife-instruction{top:60px;left:8px;width:clamp(170px,27vw,220px);padding:8px 10px;font-size:clamp(10px,1.5vw,11px);line-height:1.4}
-  .glow-phone,.migration-phone{top:58px;height:calc(100svh - 66px);min-height:0;width:clamp(175px,26vw,220px)}
+  .glow-phone{top:58px;height:calc(100svh - 66px);min-height:0;width:clamp(175px,26vw,220px)}
   .glow-phone{right:8px}
-  .migration-phone{left:8px}
+  .migration-card{top:58px;left:8px;width:clamp(290px,36vw,400px);max-height:calc(100svh - 68px);overflow-y:auto;padding:12px 15px}
   .phone-frame{padding:5px;border-radius:27px}
   .phone-screen{border-radius:22px}
   .phone-island{top:5px;height:12px}
@@ -180,13 +196,78 @@
   .app-empty-icon{width:22px;height:22px;font-size:14px}
   .sighting-row{min-height:43px;gap:6px}
   .sighting-image{width:30px;height:30px}
-  .migration-heading{padding:7px 11px 6px}
-  .migration-heading .app-overline{margin-bottom:4px}
-  .migration-heading h2{font-size:20px}
-  .migration-heading p{display:none}
-  .migration-map{min-height:0;margin-inline:7px}
-  .migration-flock{width:55px;height:40px}
-  .migration-footer{min-height:30px;padding:0 11px 5px;font-size:7px}
+  .migration-card-overline{margin-top:10px}
+  .migration-card-content h2{font-size:24px}
+  .migration-card-meta{margin:5px 0 8px}
+  .migration-stat{min-height:48px;padding:7px}
+  .migration-stat-primary{min-height:64px}
+  .migration-stat-primary strong{font-size:28px}
+  .migration-card-note{margin-top:7px;padding:7px;font-size:8px}
+  .migration-source{margin-top:8px;font-size:8px}
+  .migration-card-updated{margin-top:5px}
   .project-credit{right:10px;bottom:6px;font-size:14px}
   .experience[data-demo="3"] .project-credit{left:10px;right:auto}
 }
+
+/* Wildlife detections are ranked cards with photos returned by iNaturalist. */
+.app-content h2{flex:none}
+.app-list-heading{flex:none;margin-top:15px}
+.app-sightings{flex:1;display:grid;align-content:start;gap:9px;padding:9px 2px 12px}
+.sighting-row{display:grid;grid-template-columns:72px minmax(0,1fr);align-items:stretch;gap:10px;min-height:0;padding:8px;border:1px solid #d1dbce;border-radius:11px;background:rgba(250,251,246,.78);animation:sighting-in .34s both}
+.sighting-image{width:72px;height:72px;align-self:center;border-radius:9px;background:#d4dfd1;overflow:hidden}
+.sighting-image img{width:100%;height:100%;object-fit:cover;filter:none}
+.sighting-image-empty{display:grid;place-items:center;color:#81977d;font-size:24px}
+.sighting-info{min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4px}
+.sighting-heading{display:flex;align-items:center;gap:6px;min-width:0}
+.sighting-name{min-width:0;flex:1;font-size:10px;font-weight:800;white-space:normal;overflow-wrap:anywhere}
+.sighting-count{flex:none;padding:4px 5px;border-radius:999px;background:#dce8d5;color:#446047;font-size:7px;font-weight:800;white-space:nowrap}
+.sighting-scientific{font:italic 9px/1.2 Georgia,serif;color:#617669;overflow-wrap:anywhere}
+.sighting-time{font-size:8px;color:#789084}
+.sighting-credit{display:-webkit-box;overflow:hidden;color:#8a978b;font-size:6px;line-height:1.2;-webkit-line-clamp:1;-webkit-box-orient:vertical}
+.wildlife-data-note{flex:none;margin:4px 0 0;padding:7px 0 0;border-top:1px solid #d4ded3;color:#839185;font-size:7px;line-height:1.35}
+.wildlife-api-state[data-state="offline"]{color:#a25345}
+.wildlife-api-state[data-state="offline"] i{background:#bf6958;box-shadow:0 0 7px #bf6958}
+@media(max-width:700px){.sighting-row{grid-template-columns:68px minmax(0,1fr);gap:8px}.sighting-image{width:68px;height:68px}.sighting-name{font-size:10px}.sighting-count{font-size:7px}}
+@media(max-height:500px) and (orientation:landscape){.app-content h2{font-size:24px}.app-list-heading{margin-top:7px}.app-sightings{gap:5px;padding:6px 1px}.sighting-row{grid-template-columns:48px minmax(0,1fr);gap:6px;padding:5px}.sighting-image{width:48px;height:48px}.sighting-name{font-size:8px}.sighting-count{font-size:6px;padding:3px}.sighting-scientific{font-size:7px}.sighting-time{font-size:6px}.wildlife-data-note{display:none}}
+
+/* Show wildlife results directly on the scene in a translucent panel. */
+.wildlife-dashboard{top:clamp(138px,17vh,168px);right:clamp(18px,4vw,58px);width:clamp(350px,38vw,490px);height:calc(100svh - clamp(220px,25vh,265px));min-height:350px;max-height:680px;padding:0 20px 16px;border:1px solid rgba(230,239,214,.25);border-radius:18px;background:rgba(7,20,14,.53);box-shadow:0 20px 60px rgba(0,0,0,.28);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;flex-direction:column;overflow:hidden}
+.experience[data-demo="3"] .wildlife-dashboard{opacity:1;transform:translateX(0);pointer-events:none}
+.experience[data-demo="3"] .wildlife-dashboard{pointer-events:auto}
+.wildlife-dashboard .app-header{flex:none;height:58px;padding:0;border-bottom:1px solid rgba(232,239,219,.2)}
+.wildlife-collapse-toggle{display:none}
+.wildlife-dashboard .app-brand{color:#f1f3e7;font-size:13px}
+.wildlife-dashboard .app-content{height:auto;min-height:0;flex:1;padding:18px 0 0;overflow:hidden}
+.wildlife-dashboard .app-overline{margin:0 0 8px;font-size:9px;color:#d0d9bf;letter-spacing:.14em}
+.wildlife-dashboard .app-content h2{font-size:clamp(34px,4vw,46px);color:#f4f2e8;line-height:.98}
+.wildlife-dashboard .app-list-heading{margin-top:14px;color:#d0d9bf}
+.wildlife-dashboard .app-sightings{flex:1;min-height:0;max-height:none;overflow-x:hidden;overflow-y:auto;grid-auto-rows:min-content;gap:9px;padding:10px 3px 14px;touch-action:pan-y;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;scrollbar-color:rgba(218,233,192,.55) transparent}
+.wildlife-dashboard .sighting-row{grid-template-columns:76px minmax(0,1fr);min-height:94px;gap:12px;padding:10px;border-color:rgba(30,54,37,.22);background:rgba(249,251,244,.96);animation:none}
+.wildlife-dashboard .sighting-image{width:76px;height:76px}
+.wildlife-dashboard .sighting-name{color:#26392a}
+.wildlife-dashboard .sighting-name{font-size:12px}
+.wildlife-dashboard .sighting-count{font-size:9px;padding:5px 7px}
+.wildlife-dashboard .sighting-scientific{font-size:10px}
+.wildlife-dashboard .sighting-time{font-size:9px}
+.wildlife-dashboard .sighting-credit{font-size:7px}
+.wildlife-dashboard .wildlife-data-note{color:rgba(231,237,220,.72);border-color:rgba(232,239,219,.2);font-size:9px}
+@media(max-width:700px){.wildlife-dashboard{top:142px;left:12px;right:12px;width:auto;height:calc(100svh - 230px);min-height:290px;padding:0 15px 12px;border-radius:15px}.wildlife-dashboard .app-header{height:48px}.wildlife-dashboard .app-header-actions{gap:8px}.wildlife-collapse-toggle{display:inline-flex;align-items:center;gap:5px;padding:6px 8px;border:1px solid rgba(232,239,219,.3);border-radius:7px;background:rgba(255,255,255,.08);color:#f2f1e8;font:600 10px/1 Manrope,'Helvetica Neue',Arial,sans-serif;cursor:pointer}.wildlife-dashboard .app-content{padding-top:13px}.wildlife-dashboard .app-content h2{font-size:34px}.wildlife-dashboard .app-list-heading{margin-top:10px}.wildlife-dashboard .app-sightings{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}.wildlife-dashboard .sighting-row{grid-template-columns:64px minmax(0,1fr);min-height:80px;gap:9px;padding:8px}.wildlife-dashboard .sighting-image{width:64px;height:64px}.wildlife-dashboard.wildlife-collapsed{height:48px;min-height:48px;padding-bottom:0}.wildlife-dashboard.wildlife-collapsed .app-content{display:none}}
+@media(max-height:500px) and (orientation:landscape){.wildlife-dashboard{top:62px;right:12px;width:clamp(330px,39vw,430px);height:calc(100svh - 125px);min-height:0;padding:0 13px 9px}.wildlife-dashboard .app-header{height:39px}.wildlife-dashboard .app-content{padding-top:8px}.wildlife-dashboard .app-content h2{font-size:25px}.wildlife-dashboard .app-list-heading{margin-top:7px}.wildlife-dashboard .app-sightings{gap:6px;padding:6px 2px}.wildlife-dashboard .sighting-row{grid-template-columns:46px minmax(0,1fr);min-height:56px;gap:7px;padding:5px}.wildlife-dashboard .sighting-image{width:46px;height:46px}.wildlife-dashboard .sighting-name{font-size:9px}.wildlife-dashboard .sighting-count{font-size:7px;padding:3px 5px}.wildlife-dashboard .sighting-scientific{font-size:8px}.wildlife-dashboard .sighting-time{font-size:7px}.wildlife-dashboard .sighting-credit,.wildlife-dashboard .wildlife-data-note{display:none}}
+
+.glow-light-status{position:absolute;z-index:5;top:clamp(92px,12vh,126px);right:clamp(16px,3vw,40px);width:230px;padding:14px 16px;border:1px solid rgba(223,231,198,.25);border-radius:12px;background:rgba(7,20,13,.72);box-shadow:0 12px 32px rgba(0,0,0,.24);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#f0f1e5;font-family:Manrope,'Helvetica Neue',Arial,sans-serif;opacity:0;transform:translateY(-5px);pointer-events:none;transition:opacity .25s,transform .25s}
+.experience[data-demo="0"] .glow-light-status{opacity:1;transform:translateY(0)}
+.glow-light-status-heading,.glow-light-color{display:flex;justify-content:space-between;align-items:center;gap:10px;color:rgba(231,237,220,.68);font-size:9px;font-weight:700;letter-spacing:.13em}
+.glow-light-live{color:#b9e5a2}.glow-light-live[data-state="offline"]{color:#ffd4c8}
+.glow-light-status-reading{display:flex;align-items:center;gap:10px;margin:13px 0 11px}
+.glow-light-status-reading strong{font-size:20px;letter-spacing:.04em}
+.glow-light-status-reading strong[data-power="off"]{color:#bdc3b5}
+.glow-light-swatch{width:25px;height:25px;flex:none;border:1px solid rgba(255,255,255,.4);border-radius:50%;background:transparent;box-shadow:0 0 14px color-mix(in srgb,currentColor 60%,transparent)}
+.glow-light-swatch[data-available="true"]{box-shadow:0 0 16px 3px currentColor}
+.glow-light-color{padding-top:9px;border-top:1px solid rgba(232,239,219,.16)}
+.glow-light-color strong{color:#f0f1e5;font-size:11px;letter-spacing:.06em}
+@media(max-width:700px){.glow-light-status{top:86px;right:12px;width:190px;padding:11px 13px}.glow-light-status-reading{margin:10px 0 9px}.glow-light-status-reading strong{font-size:17px}}
+
+.direction-control-status{position:absolute;z-index:5;top:clamp(140px,18vh,180px);left:clamp(16px,3vw,42px);max-width:min(340px,calc(100% - 32px));margin:0;padding:10px 14px;border:1px solid rgba(223,231,198,.28);border-radius:8px;background:rgba(7,20,13,.72);box-shadow:0 8px 24px rgba(0,0,0,.2);color:#f0f1e5;font:500 12px/1.45 Manrope,'Helvetica Neue',Arial,sans-serif;opacity:0;transform:translateY(-5px);pointer-events:none;transition:opacity .25s,transform .25s}
+.experience[data-demo="2"] .direction-control-status{opacity:1;transform:translateY(0)}
+.direction-control-status[data-state="offline"]{border-color:rgba(216,147,125,.55);color:#ffd4c8}
+@media(max-width:700px){.direction-control-status{top:142px;left:12px;max-width:calc(100% - 24px);font-size:11px}}

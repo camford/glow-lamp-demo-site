@@ -7,18 +7,37 @@
   <meta name="description" content="BioGlow interactive field experience">
   <title>BioGlow · Field experience</title>
   <link rel="preload" as="image" href="assets/night-garden.png">
-  <link rel="stylesheet" href="scene.css?v=6">
-  <script src="script.js?v=3" defer></script>
+  <link rel="stylesheet" href="scene.css?v=14">
+  <script src="script.js?v=12" defer></script>
   <script src="model-data.js" defer></script>
   <script src="scene-image.js" defer></script>
   <script src="scene-day-image.js" defer></script>
   <script src="overhead-image.js" defer></script>
-  <script src="model.js?v=13" defer></script>
+  <script src="model.js?v=18" defer></script>
 </head>
 <body>
   <main class="experience" data-demo="0" data-light="night" data-migration-intensity="1">
     <canvas class="scene-view" aria-label="Interactive 3D garden scene. Drag to look around in most views. In Directional light, drag the person, tap the ground, or use arrow keys to move them; the camera stays fixed." tabindex="0"></canvas>
+    <aside class="glow-light-status" aria-label="Live lamp status">
+      <div class="glow-light-status-heading"><span>STATION LIGHT</span><span class="glow-light-live" data-light-live>CONNECTING</span></div>
+      <div class="glow-light-status-reading"><span class="glow-light-swatch" data-light-swatch aria-hidden="true"></span><strong data-light-power>Checking power…</strong></div>
+      <div class="glow-light-color"><span>LIVE COLOR</span><strong data-light-color>—</strong></div>
+    </aside>
+    <div class="sensor-overlay" aria-label="Lamp sensors and features" inert>
+      <svg class="sensor-connectors" viewBox="0 0 1000 700" preserveAspectRatio="none" aria-hidden="true">
+        <defs><marker id="sensor-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#deedb7" /></marker></defs>
+        <path class="connector-microphone" d="M235 150 L430 150 L488 174" marker-end="url(#sensor-arrow)" />
+        <path class="connector-lux" d="M765 150 L570 150 L512 174" marker-end="url(#sensor-arrow)" />
+        <path class="connector-distance" d="M765 350 L575 350 L510 305" marker-end="url(#sensor-arrow)" />
+        <path class="connector-migration" d="M235 405 L430 405 L482 320" marker-end="url(#sensor-arrow)" />
+      </svg>
+      <article class="sensor-card sensor-microphone"><span class="sensor-icon" aria-hidden="true">⌁</span><div><strong>Microphone</strong><span>Listens for nearby wildlife calls so G.L.O.W. can detect and log local animals.</span></div></article>
+      <article class="sensor-card sensor-lux"><span class="sensor-icon" aria-hidden="true">☼</span><div><strong>Lux sensor</strong><span>Measures ambient light, helping the lamp adjust its glow as the surroundings get brighter or darker.</span></div></article>
+      <article class="sensor-card sensor-distance"><span class="sensor-icon" aria-hidden="true">⌖</span><div><strong>Distance sensor</strong><span>Detects how close someone is, allowing the lamp to respond to nearby movement.</span></div></article>
+      <article class="sensor-card sensor-migration"><span class="sensor-icon" aria-hidden="true">↗</span><div><strong>Bird migration</strong><span>Shows flock movement on the migration map and demonstrates lamp output responding as birds pass.</span></div></article>
+    </div>
     <div class="walking-person" aria-hidden="true"></div>
+    <p class="direction-control-status" data-direction-control-status role="status" aria-live="polite"></p>
     <div class="wildlife-layer" inert>
       <button class="wildlife-animal wildlife-coyote" type="button" data-animal="coyote" aria-label="Hear the coyote and log a sighting"><img src="assets/wildlife-coyote.png" alt=""></button>
       <button class="wildlife-animal wildlife-owl" type="button" data-animal="owl" aria-label="Hear the great horned owl and log a sighting"><img src="assets/wildlife-great-horned-owl.png" alt=""></button>
@@ -26,42 +45,38 @@
       <button class="wildlife-animal wildlife-raccoon" type="button" data-animal="raccoon" aria-label="Hear the raccoon and log a sighting"><img src="assets/wildlife-raccoon.png" alt=""></button>
     </div>
     <p class="wildlife-instruction">Tap an animal in the scene to hear its call and record a sighting.</p>
-    <section class="glow-phone" aria-label="G.L.O.W. app, Local wildlife" inert>
-      <div class="phone-frame">
-        <div class="phone-screen">
-          <div class="phone-island" aria-hidden="true"></div>
-          <div class="phone-status"><span class="phone-clock">9:41</span><span class="phone-signals" aria-hidden="true">●●●  ▰</span></div>
-          <div class="app-header"><div class="app-brand">G.L.O.W<span class="app-brand-dot">.</span></div><div class="app-header-actions"><span class="app-live"><i></i> LIVE</span><a class="audio-credits-link" href="audio-credits.html" target="_blank" rel="noopener" aria-label="Animal recording credits">ⓘ</a></div></div>
-          <div class="app-content">
-            <p class="app-overline">FIELD STATION / 01</p>
-            <h2>Local<br>wildlife<span>.</span></h2>
-            <div class="app-list-heading"><span>RECENT SIGHTINGS</span><span class="app-count" aria-label="0 sightings">00</span></div>
-            <div class="app-sightings" role="log" aria-label="Wildlife sightings" aria-live="polite">
-              <div class="app-empty"><span class="app-empty-icon" aria-hidden="true">✳</span><span>No sightings yet.<br>Explore the garden.</span></div>
+    <section class="glow-phone wildlife-dashboard" aria-label="Wildlife detection data" inert>
+      <div class="app-header"><div class="app-brand">G.L.O.W<span class="app-brand-dot">.</span></div><div class="app-header-actions"><span class="app-live wildlife-api-state"><i></i><span data-wildlife-api-state>CONNECTING</span></span><a class="audio-credits-link" href="audio-credits.html" target="_blank" rel="noopener" aria-label="Animal recording credits">ⓘ</a><button class="wildlife-collapse-toggle" type="button" aria-expanded="true" aria-controls="wildlife-content">Collapse <span aria-hidden="true">⌃</span></button></div></div>
+      <div class="app-content" id="wildlife-content">
+            <p class="app-overline">STATION DETECTIONS / 1H</p>
+            <h2>Detected<br>animals<span>.</span></h2>
+            <div class="app-list-heading"><span>TOP MODEL MATCHES</span><span class="app-count" aria-label="0 detections">00</span></div>
+            <div class="app-sightings" role="log" tabindex="0" aria-label="Detected animals from recent station recordings" aria-live="polite">
+              <div class="app-empty"><span class="app-empty-icon" aria-hidden="true">✳</span><span>Loading recent microphone analyses…</span></div>
             </div>
-          </div>
-          <div class="phone-home" aria-hidden="true"></div>
-        </div>
+            <p class="wildlife-data-note">Counts are top species matches across completed recordings; model matches are not confirmed observations.</p>
       </div>
     </section>
-    <section class="migration-phone" aria-label="G.L.O.W. app, Bay Area migration map" inert>
-      <div class="phone-frame">
-        <div class="phone-screen migration-screen">
-          <div class="phone-island" aria-hidden="true"></div>
-          <div class="phone-status"><span class="phone-clock">9:41</span><span class="phone-signals" aria-hidden="true">●●●  ▰</span></div>
-          <div class="app-header"><div class="app-brand">G.L.O.W<span class="app-brand-dot">.</span></div><span class="app-live"><i></i> LIVE</span></div>
-          <div class="migration-heading"><span class="app-overline">MIGRATION WATCH / BAY AREA</span><h2>Birds nearby<span>.</span></h2><p>The flock passes the lamp automatically.</p></div>
-          <div class="migration-map" aria-label="Bay Area map centered on our location with a flock passing over it">
-            <div class="migration-tile-layer" aria-hidden="true"></div>
-            <div class="migration-location" aria-label="Our location"><span class="migration-location-pulse"></span><span class="migration-location-dot"></span><span class="migration-location-label">OUR LOCATION</span></div>
-            <div class="migration-flock" aria-hidden="true" style="left:23%;top:7%">
-              <svg viewBox="0 0 92 66" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M26 10q7-8 14 0q7-8 14 0"/><path d="M5 28q6-7 12 0q6-7 12 0"/><path d="M47 29q8-9 16 0q8-9 16 0"/><path d="M20 50q7-8 14 0q7-8 14 0"/><path d="M63 52q5-6 10 0q5-6 10 0"/></g></svg>
-            </div>
-            <a class="migration-attribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>
-          </div>
-          <div class="migration-footer"><span><i class="migration-footer-dot"></i> LAMP OUTPUT</span><output class="migration-output">100%</output></div>
-          <div class="phone-home" aria-hidden="true"></div>
+    <section class="migration-card" aria-label="Bird migration data" inert>
+      <header class="migration-card-header">
+        <div class="app-brand">G.L.O.W<span class="app-brand-dot">.</span></div>
+        <span class="app-live migration-api-state"><i></i><span data-api-state>CONNECTING</span></span>
+      </header>
+      <div class="migration-card-content">
+        <p class="migration-card-overline">BIRDCAST / <span data-bird-region>CALIFORNIA</span></p>
+        <h2>Bird migration<span>.</span></h2>
+        <p class="migration-card-meta" data-birdcast-meta>Loading latest cached migration data…</p>
+        <div class="migration-stats">
+          <article class="migration-stat migration-stat-primary"><span>BIRDS IN FLIGHT</span><strong data-birds-in-flight>—</strong></article>
+          <article class="migration-stat"><span>TOTAL CROSSED</span><strong data-birds-crossed>—</strong></article>
+          <article class="migration-stat"><span>MIGRATION LEVEL</span><strong data-migration-level>—</strong></article>
+          <article class="migration-stat"><span>DIRECTION</span><strong data-migration-direction>—</strong></article>
+          <article class="migration-stat"><span>SPEED</span><strong data-migration-speed>—</strong></article>
+          <article class="migration-stat"><span>ALTITUDE</span><strong data-migration-altitude>—</strong></article>
         </div>
+        <p class="migration-card-note" data-migration-note></p>
+        <a class="migration-source" data-birdcast-source href="https://dashboard.birdcast.org/region/US-CA" target="_blank" rel="noopener">Open BirdCast regional dashboard ↗</a>
+        <p class="migration-card-updated" data-migration-updated>Connecting to BirdCast data…</p>
       </div>
     </section>
     <div class="scene-atmosphere" aria-hidden="true"></div>
