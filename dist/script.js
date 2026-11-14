@@ -484,8 +484,7 @@ function startWildlife() {
 }
 
 const migrationNodes = Object.fromEntries([
-  'api-state','bird-region','birdcast-meta','birds-in-flight','birds-crossed','migration-level',
-  'migration-direction','migration-speed','migration-altitude','migration-note','migration-updated','birdcast-source'
+  'birds-in-flight','birds-crossed','migration-updated'
 ].map(name => [name, document.querySelector(`[data-${name}]`)]));
 let migrationPoll = 0;
 
@@ -508,25 +507,9 @@ function renderMigrationDashboard(payload) {
   if (!birdcast) throw new Error('BirdCast migration data is unavailable');
   const metrics = birdcast.metrics || {};
 
-  setMigrationText('bird-region', birdcast.region?.name || 'REGIONAL FEED');
   setMigrationText('birds-in-flight', Number.isFinite(metrics.birds_in_flight) ? metrics.birds_in_flight.toLocaleString() : 'Unavailable');
   setMigrationText('birds-crossed', Number.isFinite(metrics.total_birds_crossed) ? metrics.total_birds_crossed.toLocaleString() : 'Unavailable');
-  setMigrationText('migration-level', String(birdcast.migration_level || 'unknown').replaceAll('_', ' '));
-  setMigrationText('migration-direction', metrics.direction || 'Unavailable');
-  setMigrationText('migration-speed', Number.isFinite(metrics.speed_mph) ? `${metrics.speed_mph} mph` : 'Unavailable');
-  setMigrationText('migration-altitude', Number.isFinite(metrics.altitude_ft) ? `${metrics.altitude_ft.toLocaleString()} ft` : 'Unavailable');
-  setMigrationText('birdcast-meta', `${birdcast.live_feed ? 'Live feed' : 'Cached BirdCast'}${birdcast.selected_night ? ` · ${birdcast.selected_night}` : ''}`);
-  setMigrationText('migration-updated', `Retrieved ${apiDate(birdcast.retrieved_at) || 'time unavailable'}`);
-  const warning = Array.isArray(birdcast.warnings) ? birdcast.warnings.find(item => /direction|speed|altitude|unavailable|unreliable/i.test(item)) : '';
-  setMigrationText('migration-note', warning || (birdcast.live_feed ? 'BirdCast data is live.' : 'Cached regional data; BirdCast does not report a live flock position.'));
-  const sourceLink = migrationNodes['birdcast-source'];
-  try {
-    const url = new URL(birdcast.source?.url || 'https://dashboard.birdcast.org/region/US-CA');
-    sourceLink.href = url.origin === 'https://dashboard.birdcast.org' ? url.href : 'https://dashboard.birdcast.org/region/US-CA';
-  } catch {
-    sourceLink.href = 'https://dashboard.birdcast.org/region/US-CA';
-  }
-  setMigrationText('api-state', payload.latest.http_status === 200 ? 'CONNECTED' : 'CACHED');
+  setMigrationText('migration-updated', apiDate(birdcast.retrieved_at) || 'Time unavailable');
 }
 
 async function refreshMigrationDashboard() {
@@ -535,7 +518,6 @@ async function refreshMigrationDashboard() {
     if (!response.ok) throw new Error(`Dashboard API returned ${response.status}`);
     renderMigrationDashboard(await response.json());
   } catch (error) {
-    setMigrationText('api-state', 'OFFLINE');
     setMigrationText('migration-updated', error.message || 'Unable to load BirdCast migration data.');
   }
 }
